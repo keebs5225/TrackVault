@@ -1,0 +1,49 @@
+# ===== Python =====
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+venv/
+env/
+.venv/
+ENV/
+
+# VS Code Python extension workspace settings
+.python-version
+
+# ===== Node & Vite =====
+# Node modules
+node_modules/
+
+# Vite build output (default)
+dist/
+
+# Local env files
+.env
+.env.*.local
+
+# npm logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# ===== Docker =====
+# Docker Compose override for local dev
+docker-compose.override.yml
+
+# Ignore local Docker volumes and state files if any
+*.pid
+*.log
+
+# ===== IDEs & Editors =====
+# VSCode
+.vscode/
+
+# ===== OS Files =====
+# macOS
+.DS_Store
+
+# Windows
+Thumbs.db

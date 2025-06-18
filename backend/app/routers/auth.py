@@ -1,0 +1,39 @@
+from fastapi import APIRouter, HTTPException, Depends, status
+from sqlmodel.ext.asyncio.session import AsyncSession
+from sqlmodel import select
+from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+
+from app.models import User
+from app.schemas.user import UserCreate, UserRead
+from app.core.security import hash_password, verify_password, create_access_token
+from app.db import get_session
+
+router = APIRouter(prefix="/auth", tags=["auth"])
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/token")
+
+@router.post("/signup", response_model=UserRead, status_code=status.HTTP_201_CREATED)
+async def signup(user_in: UserCreate, session: AsyncSession = Depends(get_session)):
+    # 1. Check email uniqueness
+    result = await session.execute(select(User).where(User.email == user_in.email))
+    if result.scalar_one_or_none():
+        raise HTTPException(400, "Email already registered")
+    # 2. Create user
+    user = User(
+        name=user_in.name,
+        email=user_in.email,
+        password_hash=hash_password(user_in.password)
+    )
+    session.add(user)
+    await session.commit()
+    await session.refresh(user)
+    return user
+
+@router.post("/token")
+async def login(form_data: OAuth2PasswordRequestForm = Depends(),
+                session: AsyncSession = Depends(get_session)):
+    result = await session.execute(select(User).where(User.email == form_data.username))
+    user = result.scalar_one_or_none()
+    if not user or not verify_password(form_data.password, user.password_hash):
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Invalid credentials")
+    token = create_access_token({"sub": str(user.user_id)})
+    return {"access_token": token, "token_type": "bearer"}

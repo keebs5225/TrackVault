@@ -4,11 +4,13 @@ from datetime import datetime
 from typing import Optional
 from pydantic import BaseModel, EmailStr, Field
 
+
 class UserCreate(BaseModel):
     name: str
     email: EmailStr
     # password default uses Field(...) with a min_length constraint
     password: str = Field(..., min_length=8)
+
 
 class UserRead(BaseModel):
     user_id: int
@@ -19,6 +21,7 @@ class UserRead(BaseModel):
 
     class Config:
         orm_mode = True
+
 
 class UserUpdate(BaseModel):
     name: Optional[str] = None

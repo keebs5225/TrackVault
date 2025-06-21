@@ -6,12 +6,12 @@ from typing import AsyncGenerator
 
 # 1) Build the URL—for Docker Compose, the service name is "db"
 DATABASE_URL = os.getenv(
-    "DATABASE_URL",
-    "postgresql+asyncpg://keebs:keebs@db:5432/trackvault"
+    "DATABASE_URL", "postgresql+asyncpg://keebs:keebs@db:5432/trackvault"
 )
 
 # 2) Create an async engine
 engine = create_async_engine(DATABASE_URL, echo=True, future=True)
+
 
 # 3) Dependency for endpoints: yields an AsyncSession
 async def get_session() -> AsyncGenerator[AsyncSession, None]:

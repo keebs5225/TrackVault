@@ -1,7 +1,9 @@
+# backend/app/routers/auth.py
 from fastapi import APIRouter, HTTPException, Depends, status
 from sqlmodel.ext.asyncio.session import AsyncSession
 from sqlmodel import select
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from pydantic import BaseModel
 
 from app.models import User
 from app.schemas.user import UserCreate, UserRead
@@ -11,8 +13,17 @@ from app.db import get_session
 router = APIRouter(prefix="/auth", tags=["auth"])
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/token")
 
+
+class Token(BaseModel):
+    access_token: str
+    token_type: str
+
+
 @router.post("/signup", response_model=UserRead, status_code=status.HTTP_201_CREATED)
-async def signup(user_in: UserCreate, session: AsyncSession = Depends(get_session)):
+async def signup(
+    user_in: UserCreate,
+    session: AsyncSession = Depends(get_session),
+) -> UserRead:
     # 1. Check email uniqueness
     result = await session.execute(select(User).where(User.email == user_in.email))
     if result.scalar_one_or_none():
@@ -21,19 +32,22 @@ async def signup(user_in: UserCreate, session: AsyncSession = Depends(get_sessio
     user = User(
         name=user_in.name,
         email=user_in.email,
-        password_hash=hash_password(user_in.password)
+        password_hash=hash_password(user_in.password),
     )
     session.add(user)
     await session.commit()
     await session.refresh(user)
-    return user
+    return UserRead.from_orm(user)
 
-@router.post("/token")
-async def login(form_data: OAuth2PasswordRequestForm = Depends(),
-                session: AsyncSession = Depends(get_session)):
+
+@router.post("/token", response_model=Token)
+async def login(
+    form_data: OAuth2PasswordRequestForm = Depends(),
+    session: AsyncSession = Depends(get_session),
+) -> Token:
     result = await session.execute(select(User).where(User.email == form_data.username))
     user = result.scalar_one_or_none()
     if not user or not verify_password(form_data.password, user.password_hash):
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Invalid credentials")
     token = create_access_token({"sub": str(user.user_id)})
-    return {"access_token": token, "token_type": "bearer"}
+    return Token(access_token=token, token_type="bearer")

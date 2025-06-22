@@ -18,5 +18,5 @@ oauth2 = OAuth2PasswordBearer(tokenUrl="auth/token")
 
 @app.get("/health")
 async def health_check(session: AsyncSession = Depends(get_session)) -> Dict[str, Any]:
-    result = await session.execute(select(1))
-    return {"status": "API is running!", "db": result.scalar_one()}
+    value = await session.scalar(select(1))
+    return {"status": "API is running!", "db": value}

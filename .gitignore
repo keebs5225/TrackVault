@@ -43,3 +43,4 @@ Thumbs.db
 
 # --- Docker (if you ever build from root) ---
 docker-compose.override.yml
+*.pid

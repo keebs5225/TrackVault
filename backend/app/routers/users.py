@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlmodel.ext.asyncio.session import AsyncSession
 from sqlmodel import select
 from fastapi.security import OAuth2PasswordBearer
-from datetime import datetime
+from datetime import datetime, timezone
 from jose import jwt
 
 from app.models import User
@@ -31,11 +31,10 @@ async def get_current_user(
         user_id = int(sub)
     except Exception:
         raise HTTPException(status_code=401, detail="Invalid token")
-    result = await session.execute(select(User).where(User.user_id == user_id))
-    # scalar_one_or_none returns Any; cast it to User so MyPy knows its type
+    result = await session.exec(select(User).where(User.user_id == user_id))
     from typing import cast
 
-    raw = result.scalar_one_or_none()
+    raw = result.first()
     user = cast(User, raw)
     # If user is None, user was not found (401)
     if not user:
@@ -45,7 +44,7 @@ async def get_current_user(
 
 @router.get("/me", response_model=UserRead)
 async def read_me(current: User = Depends(get_current_user)) -> UserRead:
-    return UserRead.from_orm(current)
+    return UserRead.model_validate(current)
 
 
 @router.patch("/me", response_model=UserRead)
@@ -59,11 +58,11 @@ async def update_me(
         current.password_hash = hash_password(updates.password)
 
     # Apply other fields
-    for key, value in updates.dict(exclude_unset=True).items():
+    for key, value in updates.model_dump(exclude_unset=True).items():
         setattr(current, key, value)
 
-    current.updated_at = datetime.utcnow()
+    current.updated_at = datetime.now(timezone.utc)
     session.add(current)
     await session.commit()
     await session.refresh(current)
-    return UserRead.from_orm(current)
+    return UserRead.model_validate(current)

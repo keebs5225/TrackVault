@@ -25,8 +25,8 @@ async def signup(
     session: AsyncSession = Depends(get_session),
 ) -> UserRead:
     # 1. Check email uniqueness
-    result = await session.execute(select(User).where(User.email == user_in.email))
-    if result.scalar_one_or_none():
+    result = await session.exec(select(User).where(User.email == user_in.email))
+    if result.first():
         raise HTTPException(400, "Email already registered")
     # 2. Create user
     user = User(
@@ -37,7 +37,7 @@ async def signup(
     session.add(user)
     await session.commit()
     await session.refresh(user)
-    return UserRead.from_orm(user)
+    return UserRead.model_validate(user)
 
 
 @router.post("/token", response_model=Token)
@@ -45,8 +45,8 @@ async def login(
     form_data: OAuth2PasswordRequestForm = Depends(),
     session: AsyncSession = Depends(get_session),
 ) -> Token:
-    result = await session.execute(select(User).where(User.email == form_data.username))
-    user = result.scalar_one_or_none()
+    result = await session.exec(select(User).where(User.email == form_data.username))
+    user = result.first()
     if not user or not verify_password(form_data.password, user.password_hash):
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Invalid credentials")
     token = create_access_token({"sub": str(user.user_id)})

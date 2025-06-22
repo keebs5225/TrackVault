@@ -1,6 +1,23 @@
+version: "3.9"
+
 services:
+  backend:
+    build:
+      context: ./backend        # Dockerfile is located
+    container_name: trackvault-backend
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+    environment:
+      DATABASE_URL: postgresql+asyncpg://keebs:keebs@db:5432/trackvault
+    volumes:
+      - ./backend:/app          
+    restart: always
+
   db:
     image: postgres:15
+    container_name: trackvault-db
     restart: always
     environment:
       POSTGRES_USER: keebs

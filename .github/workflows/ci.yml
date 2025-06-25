@@ -1,3 +1,4 @@
+# .github/workflows/ci.yml
 name: CI
 
 on:
@@ -11,19 +12,30 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.11'
+
       - name: Install deps
         run: |
           pip install -r backend/requirements.txt
+
       - name: Lint & type-check
         run: |
-          pip install black flake8 mypy
+          # Pin Black to the same version you use locally
+          pip install black==25.1.0 flake8 mypy types-passlib types-python-jose
+
+          # 1) Black in check mode
           black --check backend/app
+
+          # 2) Flake8
           flake8 backend/app
-          mypy backend/app
+
+          # 3) MyPy
+          mypy --strict backend/app
+
       - name: Run tests
         run: |
           pytest --maxfail=1 --disable-warnings -q backend/tests
@@ -33,13 +45,15 @@ jobs:
     needs: backend
     steps:
       - uses: actions/checkout@v3
+
       - name: Use Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: '18'
+
       - name: Install & build
         run: |
           cd frontend
           npm ci
-          npm run lint     # if you have an ESLint script
-          npm run build    # or your test script
+          npm run lint     # your ESLint check
+          npm run build

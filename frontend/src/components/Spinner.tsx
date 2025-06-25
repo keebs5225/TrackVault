@@ -1,3 +1,4 @@
+// frontend/src/components/Spinner.tsx
 import React from 'react'
 
 export default function Spinner() {

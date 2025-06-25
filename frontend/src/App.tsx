@@ -1,3 +1,4 @@
+// frontend/src/App.tsx
 import React from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
 import Home from './pages/Home'
@@ -10,14 +11,25 @@ function App() {
 
   return (
     <Routes>
-      <Route path="/" element={<Navigate to="/login" replace />} />
+      {/* 1. Home page */}
       <Route path="/" element={<Home />} />
-      <Route path="/signup" element={<Signup />} />
+
+      {/* 2. Public routes */}
       <Route path="/login" element={<Login />} />
+      <Route path="/signup" element={<Signup />} />
+
+      {/* 3. Protected */}
       <Route
         path="/profile"
-        element={token ? <Profile /> : <Navigate to="/login" replace />}
+        element={
+          token
+            ? <Profile />
+            : <Navigate to="/login" replace />
+        }
       />
+
+      {/* 4. Catch all back to home */}
+      <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   )
 }

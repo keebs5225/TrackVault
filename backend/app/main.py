@@ -6,8 +6,18 @@ from app.db import get_session
 from sqlmodel.ext.asyncio.session import AsyncSession
 from fastapi.security import OAuth2PasswordBearer
 from app.routers import auth, users
+from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI(title="TrackVault API")
+
+# Allow React app (port:5173) to call this API
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # Include routers
 app.include_router(auth.router)

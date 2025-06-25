@@ -1,3 +1,4 @@
+// frontend/src/pages/Profile.tsx
 import React, { useEffect, useState } from 'react'
 import API from '../services/api'
 import { useNavigate } from 'react-router-dom'

@@ -1,20 +1,4 @@
-version: "3.9"
-
 services:
-  backend:
-    build:
-      context: ./backend        # Dockerfile is located
-    container_name: trackvault-backend
-    ports:
-      - "8000:8000"
-    depends_on:
-      - db
-    environment:
-      DATABASE_URL: postgresql+asyncpg://keebs:keebs@db:5432/trackvault
-    volumes:
-      - ./backend:/app          
-    restart: always
-
   db:
     image: postgres:15
     container_name: trackvault-db
@@ -28,6 +12,33 @@ services:
       - ./trackvault_schema.sql:/docker-entrypoint-initdb.d/01_schema.sql:ro
     ports:
       - "5433:5432"
+
+  backend:
+    build:
+      context: ./backend        # Dockerfile in ./backend
+    container_name: trackvault-backend
+    restart: always
+    depends_on:
+      - db
+    environment:
+      DATABASE_URL: postgresql+asyncpg://keebs:keebs@db:5432/trackvault
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app          # for live code reloading if you’re in dev
+
+  frontend:
+    build:
+      context: ./frontend      # Dockerfile in ./frontend
+    container_name: trackvault-frontend
+    restart: always
+    depends_on:
+      - backend
+    ports:
+      - "4173:4173"            # Vite preview listens here by default
+    volumes:
+      - ./frontend:/app        # if you want hot-reload; remove for pure production
+    command: ["npm", "run", "preview"]  # or "npm run dev" if you prefer dev mode
 
 volumes:
   db-data:

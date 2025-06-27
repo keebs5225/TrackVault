@@ -12,16 +12,11 @@ interface SignupForm {
   password: string
 }
 
-function Signup() {
+export default function Signup() {
   const navigate = useNavigate()
   const [form, setForm] = useState<SignupForm>({ name: '', email: '', password: '' })
 
-  // Mutation returns status instead of isLoading in v5
-  const signupMutation = useMutation<
-    AxiosResponse<any>,
-    any,
-    SignupForm
-  >({
+  const signupMutation = useMutation<AxiosResponse<any>, any, SignupForm>({
     mutationFn: newUser => API.post('/auth/signup', newUser),
     onSuccess: () => navigate('/login'),
     onError: (err: any) => alert(err.response?.data || 'Signup failed'),
@@ -38,15 +33,14 @@ function Signup() {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4 max-w-sm mx-auto p-4">
-      <h2 className="text-xl font-bold">Sign Up</h2>
+    <form onSubmit={handleSubmit}>
+      <h2>Sign Up</h2>
 
       <input
         name="name"
         placeholder="Name"
         value={form.name}
         onChange={handleChange}
-        className="border p-2 w-full"
         required
       />
 
@@ -56,7 +50,6 @@ function Signup() {
         placeholder="Email"
         value={form.email}
         onChange={handleChange}
-        className="border p-2 w-full"
         required
       />
 
@@ -66,15 +59,12 @@ function Signup() {
         placeholder="Password"
         value={form.password}
         onChange={handleChange}
-        className="border p-2 w-full"
         required
       />
 
-    <button type="submit" disabled={status === "pending"}>
-      {status === "pending" ? <Spinner /> : "Sign Up"}
-    </button>
+      <button type="submit" disabled={status === 'pending'}>
+        {status === 'pending' ? <Spinner /> : 'Sign Up'}
+      </button>
     </form>
   )
 }
-
-export default Signup

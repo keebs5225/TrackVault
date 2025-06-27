@@ -39,15 +39,14 @@ export default function Login() {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4 max-w-sm mx-auto p-4">
-      <h2 className="text-xl font-bold">Log In</h2>
+    <form onSubmit={handleSubmit}>
+      <h2>Log In</h2>
 
       <input
         name="username"
         placeholder="Email"
         value={form.username}
         onChange={handleChange}
-        className="border p-2 w-full"
         required
       />
 
@@ -57,15 +56,10 @@ export default function Login() {
         placeholder="Password"
         value={form.password}
         onChange={handleChange}
-        className="border p-2 w-full"
         required
       />
 
-      <button
-        type="submit"
-        disabled={status === 'pending'}
-        className="bg-green-500 text-white px-4 py-2 rounded disabled:opacity-50 flex items-center justify-center"
-      >
+      <button type="submit" disabled={status === 'pending'}>
         {status === 'pending' ? <Spinner /> : 'Log In'}
       </button>
     </form>

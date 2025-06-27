@@ -28,18 +28,14 @@ export default function Profile() {
   }, [navigate])
 
   if (loading) {
-    return (
-      <div className="flex justify-center items-center h-64">
-        <Spinner />
-      </div>
-    )
+    return <div className="center"><Spinner /></div>
   }
 
   return (
-    <div className="max-w-sm mx-auto p-4">
-      <h2 className="text-xl font-bold mb-4">Your Profile</h2>
+    <section>
+      <h2>Your Profile</h2>
       <p><strong>Name:</strong> {user?.name}</p>
       <p><strong>Email:</strong> {user?.email}</p>
-    </div>
+    </section>
   )
 }

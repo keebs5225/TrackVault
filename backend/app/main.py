@@ -7,6 +7,9 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 from fastapi.security import OAuth2PasswordBearer
 from app.routers import auth, users
 from fastapi.middleware.cors import CORSMiddleware
+from sqlmodel import SQLModel
+from app.db import engine
+
 
 app = FastAPI(title="TrackVault API")
 
@@ -18,6 +21,12 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# create missing tables at startup
+@app.on_event("startup")
+async def create_db_and_tables():
+    async with engine.begin() as conn:
+        await conn.run_sync(SQLModel.metadata.create_all)
 
 # Include routers
 app.include_router(auth.router)

@@ -5,6 +5,7 @@ import Home from './pages/Home'
 import Signup from './pages/Signup'
 import Login from './pages/Login'
 import Profile from './pages/Profile'
+import './styles/global.css'
 
 function App() {
   const token = localStorage.getItem('access_token')

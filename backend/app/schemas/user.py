@@ -1,29 +1,30 @@
-# backend/app/schemas/user.py
-
+# backend/app/schemas/account.py
 from datetime import datetime
+from pydantic import BaseModel, Field
 from typing import Optional
-from pydantic import BaseModel, EmailStr, Field
 
-
-class UserCreate(BaseModel):
+class AccountBase(BaseModel):
     name: str
-    email: EmailStr
-    # password default uses Field(...) with a min_length constraint
-    password: str = Field(..., min_length=8)
+    type: Optional[str] = Field(default="checking", description="e.g. checking, savings")
+    balance: Optional[float] = 0.0
+    currency: Optional[str] = "USD"
+    is_active: Optional[bool] = True
 
+class AccountCreate(AccountBase):
+    pass
 
-class UserRead(BaseModel):
+class AccountRead(AccountBase):
+    id: int
     user_id: int
-    name: str
-    email: EmailStr
     created_at: datetime
     updated_at: datetime
 
-    model_config = {"from_attributes": True}
+    class Config:
+        orm_mode = True
 
-
-class UserUpdate(BaseModel):
+class AccountUpdate(BaseModel):
     name: Optional[str] = None
-    email: Optional[EmailStr] = None
-    # optional password also constrained via Field
-    password: Optional[str] = Field(None, min_length=8)
+    type: Optional[str] = None
+    balance: Optional[float] = None
+    currency: Optional[str] = None
+    is_active: Optional[bool] = None

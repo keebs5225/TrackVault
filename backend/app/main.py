@@ -5,7 +5,7 @@ from sqlmodel import select
 from app.db import get_session
 from sqlmodel.ext.asyncio.session import AsyncSession
 from fastapi.security import OAuth2PasswordBearer
-from app.routers import auth, users
+from app.routers import auth, users, accounts, categories, transactions
 from fastapi.middleware.cors import CORSMiddleware
 from sqlmodel import SQLModel
 from app.db import engine
@@ -29,8 +29,11 @@ async def create_db_and_tables():
         await conn.run_sync(SQLModel.metadata.create_all)
 
 # Include routers
-app.include_router(auth.router)
-app.include_router(users.router)
+app.include_router(auth)
+app.include_router(users)
+app.include_router(accounts)
+app.include_router(categories)
+app.include_router(transactions)
 
 oauth2 = OAuth2PasswordBearer(tokenUrl="auth/token")
 

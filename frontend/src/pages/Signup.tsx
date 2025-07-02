@@ -1,10 +1,12 @@
-// src/pages/Signup.tsx
+// frontend/src/pages/Signup.tsx
 import React, { useState } from 'react'
 import { useMutation } from '@tanstack/react-query'
 import type { AxiosResponse } from 'axios'
 import API from '../services/api'
 import { useNavigate } from 'react-router-dom'
 import Spinner from '../components/Spinner'
+import '../styles/global.css';
+
 
 interface SignupForm {
   name: string
@@ -19,7 +21,14 @@ export default function Signup() {
   const signupMutation = useMutation<AxiosResponse<any>, any, SignupForm>({
     mutationFn: newUser => API.post('/auth/signup', newUser),
     onSuccess: () => navigate('/login'),
-    onError: (err: any) => alert(err.response?.data || 'Signup failed'),
+    onError: (err: any) => {
+      if (err.response?.status === 400) {
+        // Email already registered
+        navigate('/login', { state: { flash: 'Already have an account under this email.' } })
+      } else {
+        alert(err.response?.data || 'Signup failed')
+      }
+    },
   })
 
   const { mutate, status } = signupMutation

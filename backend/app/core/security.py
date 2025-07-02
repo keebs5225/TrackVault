@@ -1,34 +1,33 @@
-# backend/app/core/security.py
-# This module handles password hashing and JWT token creation for user authentication.
+from fastapi import Depends, HTTPException, status
+from fastapi.security import OAuth2PasswordBearer
+from jose import JWTError, jwt
+from sqlmodel.ext.asyncio.session import AsyncSession
 
-from typing import Any, Dict
-from passlib.context import CryptContext
-from datetime import datetime, timedelta, timezone
-from jose import jwt
+from app.db import get_session
+from app.models import User
+from app.core.config import SECRET_KEY, ALGORITHM  # or wherever you pull these from
 
-# 1) Password hashing
-pwd_ctx = CryptContext(schemes=["bcrypt"], deprecated="auto")
-
-
-def hash_password(password: str) -> str:
-    return pwd_ctx.hash(password)
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/token")
 
 
-def verify_password(plain: str, hashed: str) -> bool:
-    return pwd_ctx.verify(plain, hashed)
+async def get_current_user(
+    token: str = Depends(oauth2_scheme),
+    session: AsyncSession = Depends(get_session),
+) -> User:
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Could not validate credentials",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        user_id: str = payload.get("sub")
+        if not user_id:
+            raise credentials_exception
+    except JWTError:
+        raise credentials_exception
 
-
-# 2) JWT settings
-SECRET_KEY = "CHANGE_THIS_TO_A_RANDOM_SECRET"
-ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 60
-
-
-def create_access_token(data: Dict[str, Any]) -> str:
-    """
-    Create a JWT token containing the passed data dict plus an expiration.
-    """
-    to_encode = data.copy()
-    expire = datetime.now(timezone.utc) + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-    to_encode.update({"exp": expire})
-    return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    user = await session.get(User, int(user_id))
+    if not user:
+        raise credentials_exception
+    return user

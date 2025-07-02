@@ -8,7 +8,6 @@ from pydantic import BaseModel, EmailStr, Field
 class UserCreate(BaseModel):
     name: str
     email: EmailStr
-    # password default uses Field(...) with a min_length constraint
     password: str = Field(..., min_length=8)
 
 
@@ -16,6 +15,7 @@ class UserRead(BaseModel):
     user_id: int
     name: str
     email: EmailStr
+    password: str = Field(..., min_length=8)
     created_at: datetime
     updated_at: datetime
 
@@ -25,5 +25,4 @@ class UserRead(BaseModel):
 class UserUpdate(BaseModel):
     name: Optional[str] = None
     email: Optional[EmailStr] = None
-    # optional password also constrained via Field
     password: Optional[str] = Field(None, min_length=8)

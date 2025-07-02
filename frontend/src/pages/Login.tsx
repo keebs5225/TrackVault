@@ -1,10 +1,12 @@
 // frontend/src/pages/Login.tsx
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useMutation } from '@tanstack/react-query'
 import type { AxiosResponse } from 'axios'
 import API from '../services/api'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import Spinner from '../components/Spinner'
+import '../styles/global.css';
+
 
 interface LoginForm {
   username: string
@@ -13,7 +15,19 @@ interface LoginForm {
 
 export default function Login() {
   const navigate = useNavigate()
+  const location = useLocation()
+  const [flash, setFlash] = useState<string | null>(null)
   const [form, setForm] = useState<LoginForm>({ username: '', password: '' })
+
+  // show & clear any flash message coming from Signup
+  useEffect(() => {
+    const state = location.state as { flash?: string }
+    if (state?.flash) {
+      setFlash(state.flash)
+      // Clear so it doesn’t reappear
+      window.history.replaceState({}, '')
+    }
+  }, [location.state])
 
   const loginMutation = useMutation<AxiosResponse<any>, any, LoginForm>({
     mutationFn: creds =>
@@ -23,9 +37,11 @@ export default function Login() {
       })),
     onSuccess: res => {
       localStorage.setItem('access_token', res.data.access_token)
-      navigate('/profile')
+      navigate('/dashboard')
     },
-    onError: (err: any) => alert(err.response?.data || 'Login failed'),
+    onError: (err: any) => {
+      alert(err.response?.data || 'Login failed')
+    },
   })
 
   const { mutate, status } = loginMutation
@@ -41,6 +57,7 @@ export default function Login() {
   return (
     <form onSubmit={handleSubmit}>
       <h2>Log In</h2>
+      {flash && <div style={{ color: 'crimson', marginBottom: '1rem' }}>{flash}</div>}
 
       <input
         name="username"

@@ -9,7 +9,7 @@ from app.models import Account
 from app.schemas.account import AccountCreate, AccountRead, AccountUpdate
 from app.routers.users import get_current_user
 
-router = APIRouter(prefix="/accounts", tags=["accounts"])
+router = APIRouter(tags=["accounts"])
 
 
 @router.post("", response_model=AccountRead, status_code=status.HTTP_201_CREATED)

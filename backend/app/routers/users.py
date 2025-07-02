@@ -14,7 +14,7 @@ from app.models import User
 from app.schemas.user import UserRead, UserUpdate
 from app.core.security import hash_password, SECRET_KEY, ALGORITHM
 
-router = APIRouter(prefix="/users", tags=["users"])
+router = APIRouter(tags=["users"])
 oauth2 = OAuth2PasswordBearer(tokenUrl="auth/token")
 
 

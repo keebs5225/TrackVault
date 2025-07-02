@@ -9,7 +9,7 @@ from app.schemas.transactions import TransactionCreate, TransactionRead, Transac
 from app.routers.users import get_current_user
 from datetime import datetime
 
-router = APIRouter(prefix="/transactions", tags=["transactions"])
+router = APIRouter(tags=["transactions"])
 
 
 @router.post("", response_model=TransactionRead, status_code=status.HTTP_201_CREATED)

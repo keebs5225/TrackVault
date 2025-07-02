@@ -15,7 +15,6 @@ class UserRead(BaseModel):
     user_id: int
     name: str
     email: EmailStr
-    password: str = Field(..., min_length=8)
     created_at: datetime
     updated_at: datetime
 

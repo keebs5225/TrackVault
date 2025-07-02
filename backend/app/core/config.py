@@ -1,13 +1,12 @@
 # backend/app/core/config.py
-from pydantic import BaseSettings, Field
 
-class Settings(BaseSettings):
-    SECRET_KEY: str = Field(..., env="SECRET_KEY")
-    ALGORITHM: str = Field("HS256", env="ALGORITHM")
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = Field(60, env="ACCESS_TOKEN_DURATION")
+import os
+from dotenv import load_dotenv
 
-    class Config:
-        env_file = ".env"
-        env_file_encoding = "utf-8"
+# 1) Load .env file at project root
+load_dotenv()
 
-settings = Settings()
+# 2) Pull in our secrets (with sensible defaults/fallbacks)
+SECRET_KEY                 = os.getenv("SECRET_KEY")
+ALGORITHM                  = os.getenv("ALGORITHM")
+ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_DURATION"))

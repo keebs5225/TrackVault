@@ -9,7 +9,7 @@ from app.schemas.category import CategoryCreate, CategoryRead, CategoryUpdate
 from app.routers.users import get_current_user
 from datetime import datetime
 
-router = APIRouter(prefix="/categories", tags=["categories"])
+router = APIRouter(tags=["categories"])
 
 
 @router.post("", response_model=CategoryRead, status_code=status.HTTP_201_CREATED)

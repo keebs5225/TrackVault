@@ -28,42 +28,38 @@ async def on_startup():
     async with engine.begin() as conn:
         await conn.run_sync(SQLModel.metadata.create_all)
 
-
 # === Authentication ===
 # /auth/signup, /auth/token
 app.include_router(
-    auth.router,
+    auth,                   # <-- was auth.route
     prefix="/auth",
     tags=["authentication"],
 )
 
-
 # === User profile management ===
 # GET /users/me, PATCH /users/me, DELETE /users/me
 app.include_router(
-    users.router,
+    users,                  # <-- was users.route
     prefix="/users",
     tags=["users"],
 )
 
-
 # === Other domain routers ===
 app.include_router(
-    accounts.router,
+    accounts,               # <-- was accounts.route
     prefix="/accounts",
     tags=["accounts"],
 )
 app.include_router(
-    categories.router,
+    categories,             # <-- was categories.route
     prefix="/categories",
     tags=["categories"],
 )
 app.include_router(
-    transactions.router,
+    transactions,           # <-- was transactions.route
     prefix="/transactions",
     tags=["transactions"],
 )
-
 
 # A simple healthcheck
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/token")

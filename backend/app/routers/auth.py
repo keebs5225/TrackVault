@@ -10,8 +10,8 @@ from app.schemas.user import UserCreate, UserRead
 from app.core.security import hash_password, verify_password, create_access_token
 from app.db import get_session
 
-router = APIRouter(prefix="/auth", tags=["auth"])
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/token")
+router = APIRouter(tags=["auth"])
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/token")
 
 
 class Token(BaseModel):

@@ -14,7 +14,7 @@ class AccountCreate(AccountBase):
     pass
 
 class AccountRead(AccountBase):
-    id: int
+    account_id: int
     user_id: int
     created_at: datetime
     updated_at: datetime

@@ -5,9 +5,11 @@ import { NavLink } from 'react-router-dom';
 const items = [
   { to: '/dashboard', label: 'Home', icon: '🏠' },
   { to: '/profile', label: 'Profile', icon: '👤' },
+  { to: '/accounts',      label: 'Accounts',    icon: '🏦' },
   { to: '/transactions', label: 'Transactions', icon: '💳' },
   { to: '/budgets', label: 'Budgets', icon: '📊' },
   { to: '/analytics', label: 'Analytics', icon: '📈' },
+  { to: '/categories',    label: 'Categories',  icon: '📂' },
   { to: '/recurring', label: 'Recurring', icon: '🔁' },
   { to: '/goals', label: 'Goals', icon: '🎯' },
   { to: '/settings', label: 'Settings', icon: '⚙️' },

@@ -1,27 +1,26 @@
 # backend/app/schemas/category.py
+from __future__ import annotations
 from datetime import datetime
-from pydantic import BaseModel, Field
 from typing import Optional, List
+from pydantic import BaseModel, Field
 
 class CategoryBase(BaseModel):
     name: str
-    type: Optional[str] = Field(default="expense", description="income or expense")
+    type: str = Field("expense", description="income or expense")
     parent_category_id: Optional[int] = None
-    is_active: Optional[bool] = True
-
-class CategoryCreate(CategoryBase):
-    pass
+    is_active: bool = True
 
 class CategoryRead(CategoryBase):
-    id: int
+    category_id: int
     user_id: int
     created_at: datetime
     updated_at: datetime
-    # Nested children (optional)
-    children: Optional[List["CategoryRead"]] = []
+    children: List[CategoryRead] = Field(default_factory=list)
 
-    class Config:
-        orm_mode = True
+    model_config = {"from_attributes": True}
+
+class CategoryCreate(CategoryBase):
+    pass
 
 class CategoryUpdate(BaseModel):
     name: Optional[str] = None

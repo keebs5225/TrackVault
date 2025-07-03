@@ -30,36 +30,16 @@ async def on_startup():
 
 # === Authentication ===
 # /auth/signup, /auth/token
-app.include_router(
-    auth,                   # <-- was auth.route
-    prefix="/auth",
-    tags=["authentication"],
-)
+app.include_router( auth, prefix="/auth", tags=["authentication"],)
 
 # === User profile management ===
 # GET /users/me, PATCH /users/me, DELETE /users/me
-app.include_router(
-    users,                  # <-- was users.route
-    prefix="/users",
-    tags=["users"],
-)
+app.include_router( users, prefix="/users", tags=["users"])
 
 # === Other domain routers ===
-app.include_router(
-    accounts,               # <-- was accounts.route
-    prefix="/accounts",
-    tags=["accounts"],
-)
-app.include_router(
-    categories,             # <-- was categories.route
-    prefix="/categories",
-    tags=["categories"],
-)
-app.include_router(
-    transactions,           # <-- was transactions.route
-    prefix="/transactions",
-    tags=["transactions"],
-)
+app.include_router(accounts, prefix="/accounts", tags=["accounts"])
+app.include_router(categories, prefix="/categories", tags=["categories"])
+app.include_router(transactions, prefix="/transactions", tags=["transactions"])
 
 # A simple healthcheck
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/token")

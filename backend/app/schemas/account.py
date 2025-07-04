@@ -5,17 +5,21 @@ from typing import Optional
 
 class AccountBase(BaseModel):
     name: str
-    type: Optional[str] = Field(default="checking", description="e.g. checking, savings")
-    balance: Optional[float] = 0.0
-    currency: Optional[str] = "USD"
-    is_active: Optional[bool] = True
+    account_type: Optional[str] = Field(
+        "checking",
+        description="one of: checking, savings, credit, cash"
+    )
+    balance: Optional[float] = Field(
+        0.0,
+        description="starting balance"
+    )
 
 class AccountCreate(AccountBase):
     pass
 
 class AccountRead(AccountBase):
     account_id: int
-    user_id: int
+    user_id:    int
     created_at: datetime
     updated_at: datetime
 
@@ -23,8 +27,6 @@ class AccountRead(AccountBase):
         orm_mode = True
 
 class AccountUpdate(BaseModel):
-    name: Optional[str] = None
-    type: Optional[str] = None
-    balance: Optional[float] = None
-    currency: Optional[str] = None
-    is_active: Optional[bool] = None
+    name:         Optional[str] = None
+    account_type: Optional[str] = None
+    balance:      Optional[float] = None

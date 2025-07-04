@@ -54,4 +54,43 @@ export interface AccountUpdate {
   is_active?: boolean;
 }
 
-// add TransactionRead/Create/Update here later
+export interface TransactionRead {
+  transaction_id: number;
+  user_id: number;
+  amount: number;
+  date: string;
+  description: string;
+  account_id: number;
+  category_id: number;
+  type: string;
+  notes?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface TransactionCreate {
+  amount: number;
+  date?: string;
+  description: string;
+  account_id: number;
+  category_id: number;
+  type?: string;
+  notes?: string;
+}
+
+export interface TransactionUpdate {
+  amount?: number;
+  date?: string;
+  description?: string;
+  account_id?: number;
+  category_id?: number;
+  type?: string;
+  notes?: string;
+}
+
+export interface Paged<T> {
+  total: number;
+  page: number;
+  page_size: number;
+  items: T[];
+}

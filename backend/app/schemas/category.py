@@ -6,24 +6,26 @@ from pydantic import BaseModel, Field
 
 class CategoryBase(BaseModel):
     name: str
-    type: str = Field("expense", description="income or expense")
+    type: str = Field(
+        "expense",
+        description="one of: income, expense"
+    )
     parent_category_id: Optional[int] = None
-    is_active: bool = True
-
-class CategoryRead(CategoryBase):
-    category_id: int
-    user_id: int
-    created_at: datetime
-    updated_at: datetime
-    children: List[CategoryRead] = Field(default_factory=list)
-
-    model_config = {"from_attributes": True}
 
 class CategoryCreate(CategoryBase):
     pass
 
+class CategoryRead(CategoryBase):
+    category_id: int
+    user_id:     int
+    created_at:  datetime
+    updated_at:  datetime
+    children:    List[CategoryRead] = Field(default_factory=list)
+
+    class Config:
+        orm_mode = True
+
 class CategoryUpdate(BaseModel):
-    name: Optional[str] = None
-    type: Optional[str] = None
-    parent_category_id: Optional[int] = None
-    is_active: Optional[bool] = None
+    name:                Optional[str] = None
+    type:                Optional[str] = None
+    parent_category_id:  Optional[int] = None

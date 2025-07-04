@@ -9,7 +9,7 @@ from app.schemas.category import CategoryCreate, CategoryRead, CategoryUpdate
 from app.core.security import get_current_user
 from app.db import get_session
 
-router = APIRouter(prefix="/categories", tags=["categories"])
+router = APIRouter(tags=["categories"])
 
 
 @router.post("", response_model=CategoryRead, status_code=status.HTTP_201_CREATED)
@@ -18,8 +18,7 @@ async def create_category(
     current=Depends(get_current_user),
     session: AsyncSession = Depends(get_session),
 ):
-    cat = Category.from_orm(category_in)
-    cat.user_id = current.user_id
+    cat = Category(**category_in.dict(), user_id=current.user_id)
     session.add(cat)
     await session.commit()
     await session.refresh(cat)

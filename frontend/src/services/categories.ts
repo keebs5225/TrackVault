@@ -1,9 +1,10 @@
+//frontend/src/services/categories.ts
 import API from './api'
 import type { CategoryRead, CategoryCreate, CategoryUpdate } from '../types.ts'
 
 // fully‐nested tree
 export const fetchCategoryTree = () =>
-  API.get<CategoryRead[]>('/categories/tree').then(r => r.data)
+  API.get<CategoryRead[]>('/categories').then(r => r.data)
 
 export const createCategory = (data: CategoryCreate) =>
   API.post<CategoryRead>('/categories', data).then(r => r.data)

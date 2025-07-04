@@ -9,7 +9,7 @@ from app.schemas.account import AccountCreate, AccountRead, AccountUpdate
 from app.core.security import get_current_user
 from app.db import get_session
 
-router = APIRouter(prefix="/accounts", tags=["accounts"])
+router = APIRouter(tags=["accounts"])
 
 
 @router.post("", response_model=AccountRead, status_code=status.HTTP_201_CREATED)
@@ -18,8 +18,7 @@ async def create_account(
     current=Depends(get_current_user),
     session: AsyncSession = Depends(get_session),
 ):
-    acct = Account.from_orm(account_in)
-    acct.user_id = current.user_id
+    acct = Account(**account_in.dict(), user_id=current.user_id)
     session.add(acct)
     await session.commit()
     await session.refresh(acct)

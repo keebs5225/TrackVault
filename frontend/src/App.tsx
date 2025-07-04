@@ -5,8 +5,9 @@ import Login from './pages/Login';
 import Signup from './pages/Signup';
 import Dashboard from './pages/Dashboard';
 import Profile  from './pages/Profile';
-import AccountsPage from './pages/Accounts'
-import CategoriesPage from './pages/Categories'
+import Accounts from './pages/Accounts'
+import Categories from './pages/Categories'
+import Transactions from './pages/Transactions';
 
 function App() {
   const token = localStorage.getItem('access_token');
@@ -25,8 +26,9 @@ function App() {
           token ? <Dashboard /> : <Navigate to="/login" replace />
         }
       />
-      <Route path="/accounts"   element={<AccountsPage />} />
-      <Route path="/categories" element={<CategoriesPage />} />
+      <Route path="/accounts"   element={<Accounts />} />
+      <Route path="/categories" element={<Categories />} />
+      <Route path="/transactions" element={<Transactions />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );

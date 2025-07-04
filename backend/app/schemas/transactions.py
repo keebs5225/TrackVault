@@ -1,7 +1,7 @@
 # backend/app/schemas/transaction.py
 from datetime import datetime
 from pydantic import BaseModel, Field
-from typing import Optional
+from typing import Optional, List
 
 class TransactionBase(BaseModel):
     amount: float
@@ -16,7 +16,7 @@ class TransactionCreate(TransactionBase):
     pass
 
 class TransactionRead(TransactionBase):
-    id: int
+    transaction_id: int
     user_id: int
     created_at: datetime
     updated_at: datetime
@@ -32,3 +32,9 @@ class TransactionUpdate(BaseModel):
     category_id: Optional[int] = None
     type: Optional[str] = None
     notes: Optional[str] = None
+
+class TransactionReadPage(BaseModel):
+    total: int
+    page: int
+    page_size: int
+    items: List[TransactionRead]

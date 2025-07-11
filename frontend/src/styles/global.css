@@ -24,6 +24,29 @@ html, body {
   align-items: center;
 }
 
+.password-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.password-wrapper input {
+  flex: 1;
+  padding-right: 2.5rem;
+}
+.toggle-eye {
+  position: absolute;
+  right: 0.5rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  color: #666;
+}
+
 /* ────────────────────────────────────────────────────────
    LINKS & BUTTONS
 ──────────────────────────────────────────────────────── */
@@ -99,29 +122,38 @@ h1,h2,h3 {
    SIDEBAR
 ──────────────────────────────────────────────────────── */
 .sidebar {
-  display: flex;
-  flex-direction: column;
-  flex: 0 0 auto;         /* don’t grow or shrink */
-  background: #EEE;
+  width: 220px;
+  background: #eee;
   padding: 1rem;
   border-radius: 0 8px 8px 0;
+  flex-shrink: 0;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow: auto;
 }
 .sidebar ul {
   list-style: none;
-  padding: 0;
   margin: 0;
+  padding: 0;
 }
 .sidebar li {
-  margin: .75rem 0;
+  margin: 1rem 0;
 }
-.sidebar a {
+.sidebar-link {
   display: flex;
   align-items: center;
   color: #555;
+  text-decoration: none;
   transition: color .3s;
 }
-.sidebar a:hover {
+.sidebar-link:hover,
+.sidebar-link.active {
   color: #222;
+  font-weight: bold;
+}
+.sidebar-icon {
+  margin-right: 0.5rem;
 }
 
 /* ────────────────────────────────────────────────────────
@@ -145,6 +177,17 @@ h1,h2,h3 {
   padding: .5rem;
   border: 1px solid #ccc;
   border-radius: 5px;
+}
+.topbar-logo {
+  font-family: 'Georgia', serif;
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #333;
+  text-decoration: none;
+  margin-right: 2rem;
+}
+.topbar-logo:hover {
+  color: #000;
 }
 body.dark .topbar-search-input {
   background: #2b2b2b;

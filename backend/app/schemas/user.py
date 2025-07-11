@@ -1,15 +1,12 @@
 # backend/app/schemas/user.py
-
 from datetime import datetime
 from typing import Optional
 from pydantic import BaseModel, EmailStr, Field
-
 
 class UserCreate(BaseModel):
     name: str
     email: EmailStr
     password: str = Field(..., min_length=8)
-
 
 class UserRead(BaseModel):
     user_id: int
@@ -20,8 +17,8 @@ class UserRead(BaseModel):
 
     model_config = {"from_attributes": True}
 
-
 class UserUpdate(BaseModel):
     name: Optional[str] = None
     email: Optional[EmailStr] = None
-    password: Optional[str] = Field(None, min_length=8)
+    current_password: Optional[str] = Field(None, min_length=8)
+    new_password: Optional[str]     = Field(None, min_length=8)

@@ -1,8 +1,6 @@
 # backend/app/routers/users.py
-
 from typing import Any, Dict
 from datetime import datetime, timezone
-
 from fastapi import APIRouter, Depends, HTTPException, Response, status
 from fastapi.security import OAuth2PasswordBearer
 from jose import jwt
@@ -12,11 +10,10 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 from app.db import get_session
 from app.models import User
 from app.schemas.user import UserRead, UserUpdate
-from app.core.security import hash_password, SECRET_KEY, ALGORITHM
+from app.core.security import hash_password, verify_password, SECRET_KEY, ALGORITHM
 
 router = APIRouter(tags=["users"])
 oauth2 = OAuth2PasswordBearer(tokenUrl="auth/token")
-
 
 async def get_current_user(
     token: str = Depends(oauth2),
@@ -40,14 +37,12 @@ async def get_current_user(
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found")
     return user
 
-
 @router.get("/me", response_model=UserRead)
 async def read_me(current: User = Depends(get_current_user)) -> UserRead:
     """
     Get the currently-logged in user's profile.
     """
     return UserRead.model_validate(current)
-
 
 @router.patch("/me", response_model=UserRead)
 async def update_me(
@@ -56,22 +51,28 @@ async def update_me(
     session: AsyncSession = Depends(get_session),
 ) -> UserRead:
     """
-    Update fields on the current user. Only fields set in the payload will be changed.
+    Update name, email, and optionally password.
     """
-    # If password is being updated, hash it first
-    if updates.password:
-        current.password_hash = hash_password(updates.password)
+    data = updates.model_dump(exclude_unset=True)
 
-    # Apply any other provided updates
-    for field, value in updates.model_dump(exclude_unset=True).items():
+    # 1) If changing password, verify and re-hash
+    if "new_password" in data:
+        if not data.get("current_password") or not verify_password(data["current_password"], current.password_hash):
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, detail="Current password is incorrect")
+        current.password_hash = hash_password(data["new_password"])
+
+    # 2) Apply name/email changes
+    data.pop("current_password", None)
+    data.pop("new_password", None)
+    for field, value in data.items():
         setattr(current, field, value)
 
-    current.updated_at = datetime.now(timezone.utc)
+    # 3) Persist
+    current.updated_at = datetime.utcnow()
     session.add(current)
     await session.commit()
     await session.refresh(current)
     return UserRead.model_validate(current)
-
 
 @router.delete("/me", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_me(

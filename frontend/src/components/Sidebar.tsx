@@ -8,10 +8,10 @@ const items = [
   { to: '/accounts',      label: 'Accounts',    icon: '🏦' },
   { to: '/transactions', label: 'Transactions', icon: '💳' },
   { to: '/budgets', label: 'Budgets', icon: '📊' },
-  { to: '/analytics', label: 'Analytics', icon: '📈' },
-  { to: '/categories',    label: 'Categories',  icon: '📂' },
-  { to: '/recurring', label: 'Recurring', icon: '🔁' },
-  { to: '/goals', label: 'Goals', icon: '🎯' },
+  // { to: '/analytics', label: 'Analytics', icon: '📈' },
+  // { to: '/categories',    label: 'Categories',  icon: '📂' },
+  // { to: '/recurring', label: 'Recurring', icon: '🔁' },
+  // { to: '/goals', label: 'Goals', icon: '🎯' },
   { to: '/settings', label: 'Settings', icon: '⚙️' },
   { to: '/support', label: 'Help', icon: '❓' }
 ];

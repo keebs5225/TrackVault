@@ -1,45 +1,35 @@
 // frontend/src/pages/Accounts.tsx
 import React, { useState } from 'react'
-import {
-  useQuery,
-  useMutation,
-  useQueryClient,
-} from '@tanstack/react-query'
-
-import {
-  fetchAccounts,
-  createAccount,
-  deleteAccount,
-} from '../services/accounts'
-
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { fetchAccounts, createAccount, deleteAccount } from '../services/accounts'
 import type { AccountRead, AccountCreate } from '../types'
 import Spinner from '../components/Spinner'
 
 export default function AccountsPage() {
   const qc = useQueryClient()
 
-  // 1) Fetch list, with proper generics and object syntax
+  // Fetch list
   const {
-    data: accounts = [],      // default to []
-    isLoading: loadingList,   // rename to avoid confusion
+    data: accounts = [],
+    isLoading: loadingList,
   } = useQuery<AccountRead[], Error>({
     queryKey: ['accounts'],
     queryFn: fetchAccounts,
   })
 
-    // 2) Create mutation with the object API so TS picks up `isLoading`
-      const createMut = useMutation<AccountRead, Error, AccountCreate>({
-        mutationFn: createAccount,
-        onSuccess: () => qc.invalidateQueries({ queryKey: ['accounts'] }),
-      })
+  // Create
+  const createMut = useMutation<AccountRead, Error, AccountCreate>({
+    mutationFn: createAccount,
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['accounts'] }),
+  })
 
-  // 3) Delete mutation, same object‐style
+  // Delete
   const deleteMut = useMutation<void, Error, number>({
     mutationFn: deleteAccount,
     onSuccess: () => qc.invalidateQueries({ queryKey: ['accounts'] }),
   })
 
-  // local form state
+  // Local form
   const [form, setForm] = useState<AccountCreate>({
     name: '',
     type: 'checking',

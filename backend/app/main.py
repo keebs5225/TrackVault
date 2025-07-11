@@ -1,19 +1,26 @@
 # backend/app/main.py
 
-from typing import Any, Dict
-
 from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordBearer
 from sqlmodel import SQLModel, select
 from sqlmodel.ext.asyncio.session import AsyncSession
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from datetime import datetime, timedelta
 
 from app.db import engine, get_session
+from app.models import RecurringTransaction, Transaction
+
+# routers
 from app.routers import auth, users, accounts, categories, transactions
+from app.routers.budgets   import router as budgets_router
+from app.routers.recurring import router as recurring_router
+from app.routers.goals     import router as goals_router
+from app.routers.analytics import router as analytics_router
 
 app = FastAPI(title="TrackVault API")
 
-# CORS — allow your React client
+# CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:5173"],
@@ -22,33 +29,63 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Create all tables on startup
 @app.on_event("startup")
 async def on_startup():
     async with engine.begin() as conn:
         await conn.run_sync(SQLModel.metadata.create_all)
+    sched = AsyncIOScheduler()
+    sched.add_job(run_recurring, trigger="cron", hour=0, minute=0)
+    sched.start()
 
-# === Authentication ===
-# /auth/signup, /auth/token
-app.include_router( auth, prefix="/auth", tags=["authentication"],)
-
-# === User profile management ===
-# GET /users/me, PATCH /users/me, DELETE /users/me
-app.include_router( users, prefix="/users", tags=["users"])
-
-# === Other domain routers ===
-app.include_router(accounts, prefix="/accounts", tags=["accounts"])
-app.include_router(categories, prefix="/categories", tags=["categories"])
-app.include_router(transactions, prefix="/transactions", tags=["transactions"])
-
-# A simple healthcheck
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/token")
-
+# include routers
+app.include_router(auth,           prefix="/auth",        tags=["auth"])
+app.include_router(users,          prefix="/users",       tags=["users"])
+app.include_router(accounts,       prefix="/accounts",    tags=["accounts"])
+app.include_router(categories,     prefix="/categories",  tags=["categories"])
+app.include_router(transactions,   prefix="/transactions",tags=["transactions"])
+app.include_router(budgets_router, prefix="/budgets",     tags=["budgets"])
+app.include_router(recurring_router, prefix="/recurring", tags=["recurring"])
+app.include_router(goals_router,   prefix="/goals",       tags=["goals"])
+app.include_router(analytics_router, prefix="/analytics", tags=["analytics"])
 
 @app.get("/health")
-async def health_check(
-    session: AsyncSession = Depends(get_session),
-) -> Dict[str, Any]:
-    # simple DB round-trip
-    value = await session.scalar(select(1))
-    return {"status": "API is running!", "db": value}
+async def health(session: AsyncSession = Depends(get_session)):
+    ok = await session.scalar(select(1))
+    return {"status": "ok", "db": ok}
+
+async def run_recurring():
+    async with get_session() as session:
+        now = datetime.utcnow()
+        recs = (await session.exec(
+            select(RecurringTransaction)
+              .where(RecurringTransaction.next_run_date <= now)
+        )).all()
+
+        for rec in recs:
+            tx = Transaction(
+                user_id=rec.user_id,
+                account_id=rec.account_id,
+                category_id=rec.category_id,
+                amount=rec.amount,
+                date=rec.next_run_date,
+                description=f"Recurring ({rec.frequency})",
+                type="expense",
+            )
+            session.add(tx)
+
+            # bump
+            if rec.frequency == "daily":
+                rec.next_run_date += timedelta(days=1)
+            elif rec.frequency == "weekly":
+                rec.next_run_date += timedelta(weeks=1)
+            elif rec.frequency == "monthly":
+                m = rec.next_run_date.month % 12 + 1
+                y = rec.next_run_date.year + (1 if m == 1 else 0)
+                rec.next_run_date = rec.next_run_date.replace(year=y, month=m)
+            else:
+                rec.next_run_date = rec.next_run_date.replace(
+                    year=rec.next_run_date.year + 1
+                )
+            rec.updated_at = now
+
+        await session.commit()

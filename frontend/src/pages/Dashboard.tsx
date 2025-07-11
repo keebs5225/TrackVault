@@ -1,18 +1,11 @@
 // frontend/src/pages/Dashboard.tsx
 import React from 'react';
-import Sidebar from '../components/Sidebar';
-import Topbar  from '../components/Topbar';
 import '../styles/global.css';
 
 export default function Dashboard() {
   return (
-    <div className="app-container">
-      <Sidebar />
-
-      <div className="main-content">
-        <Topbar />
-        <div className="main-body">
-
+    <section>
+      <h1>Dashboard</h1>
           <h2>Summary</h2>
           <div className="summary-cards">
             <div className="project-item">
@@ -40,8 +33,6 @@ export default function Dashboard() {
           <h3>Upcoming Recurring</h3>
           <div className="project-item">[Next 3 Entries Placeholder]</div>
 
-        </div>
-      </div>
-    </div>
-  );
+    </section>
+  )
 }

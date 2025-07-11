@@ -33,6 +33,12 @@ export default function Topbar() {
 
   return (
     <header className="topbar">
+      {/* ─── Logo / Home Link ─────────────────────────── */}
+      <Link to="/dashboard" className="topbar-logo">
+        TrackVault
+      </Link>
+
+      {/* ─── Global Search ────────────────────────────── */}
       <form className="topbar-search-form" onSubmit={handleSearchSubmit}>
         <input
           type="text"

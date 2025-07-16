@@ -2,10 +2,10 @@
 import React, { useState } from 'react';
 import '../styles/global.css';
 import BudgetsTab   from './BudgetsPageTabs/BudgetsTab';
-import AnalyticsTab from './BudgetsPageTabs/AnalyticsTab';
+import CalculatorsTab from './BudgetsPageTabs/CalculatorsTab';
 import GoalsTab     from './BudgetsPageTabs/GoalsTab';
 
-type Tab = 'budgets' | 'analytics' | 'goals';
+type Tab = 'budgets' | 'calculators' | 'goals';
 
 export default function BudgetsPage() {
   const [tab, setTab] = useState<Tab>('budgets');
@@ -13,7 +13,7 @@ export default function BudgetsPage() {
   return (
     <section className="profile-page">
       <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
-        {(['budgets','analytics','goals'] as Tab[]).map(t => (
+        {(['budgets','calculators','goals'] as Tab[]).map(t => (
           <button
             key={t}
             onClick={() => setTab(t)}
@@ -25,7 +25,7 @@ export default function BudgetsPage() {
       </div>
 
       {tab === 'budgets'   && <BudgetsTab />}
-      {tab === 'analytics' && <AnalyticsTab />}
+      {tab === 'calculators' && <CalculatorsTab />}
       {tab === 'goals'     && <GoalsTab />}
     </section>
   );

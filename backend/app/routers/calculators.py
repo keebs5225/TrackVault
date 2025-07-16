@@ -1,9 +1,9 @@
-#backend/app/routers/analytics.py
+#backend/app/routers/calculators.py
 from fastapi import APIRouter
 from pydantic import BaseModel, Field
 import math
 
-router = APIRouter(prefix="/analytics", tags=["analytics"])
+router = APIRouter(prefix="/calculators", tags=["calculators"])
 
 # — Loan calculator —  
 class LoanParams(BaseModel):

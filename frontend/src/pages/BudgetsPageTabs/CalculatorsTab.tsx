@@ -1,7 +1,7 @@
-//frontend/src/pages/AnalyticsTab.tsx
+//frontend/src/pages/CalculatorsTab.tsx
 import React, { useState, useMemo } from 'react'
 
-export default function AnalyticsTab() {
+export default function CalculatorsTab() {
   const [loanAmt, setLoanAmt]     = useState('')
   const [loanRate, setLoanRate]   = useState('')
   const [loanTerm, setLoanTerm]   = useState('')
@@ -41,7 +41,7 @@ export default function AnalyticsTab() {
 
   return (
     <>
-      <h2>Analytics</h2>
+      <h2>Calculators</h2>
 
       <fieldset style={{marginBottom:16}}>
         <legend>Loan</legend>

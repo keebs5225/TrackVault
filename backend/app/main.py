@@ -16,7 +16,7 @@ from app.routers import auth, users, accounts, transactions
 from app.routers.budgets   import router as budgets_router
 from app.routers.recurring import router as recurring_router
 from app.routers.goals     import router as goals_router
-from app.routers.analytics import router as analytics_router
+from app.routers.calculators import router as calculators_router
 
 app = FastAPI(title="TrackVault API")
 
@@ -45,7 +45,7 @@ app.include_router(transactions,   prefix="/transactions",tags=["transactions"])
 app.include_router(budgets_router, prefix="/budgets",     tags=["budgets"])
 app.include_router(recurring_router, prefix="/recurring", tags=["recurring"])
 app.include_router(goals_router,   prefix="/goals",       tags=["goals"])
-app.include_router(analytics_router, prefix="/analytics", tags=["analytics"])
+app.include_router(calculators_router, prefix="/calculators", tags=["calculators"])
 
 @app.get("/health")
 async def health(session: AsyncSession = Depends(get_session)):

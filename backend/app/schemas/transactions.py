@@ -8,7 +8,6 @@ class TransactionBase(BaseModel):
     date: Optional[datetime] = None
     description: str
     account_id: int
-    category_id: int
     type: Optional[str] = Field(default="expense")
     notes: Optional[str] = None
 
@@ -29,7 +28,6 @@ class TransactionUpdate(BaseModel):
     date: Optional[datetime] = None
     description: Optional[str] = None
     account_id: Optional[int] = None
-    category_id: Optional[int] = None
     type: Optional[str] = None
     notes: Optional[str] = None
 

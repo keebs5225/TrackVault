@@ -20,7 +20,6 @@ async def list_transactions(
     start: Optional[date] = Query(None),
     end:   Optional[date] = Query(None),
     account: Optional[int] = Query(None),
-    category: Optional[int] = Query(None),
     current: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_session),
 ):
@@ -34,8 +33,6 @@ async def list_transactions(
         q = q.where(Transaction.date <= datetime.combine(end,   datetime.max.time()))
     if account:
         q = q.where(Transaction.account_id == account)
-    if category:
-        q = q.where(Transaction.category_id == category)
 
     # count total
     count_q = select(func.count()).select_from(Transaction).where(q.whereclause)  # reuse same WHERE

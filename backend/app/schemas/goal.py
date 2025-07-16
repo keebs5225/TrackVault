@@ -1,7 +1,7 @@
 #backend/app/schemas/goal.py
 from datetime import datetime
 from typing import Optional
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 
 class GoalBase(BaseModel):
     title:         str
@@ -19,8 +19,7 @@ class GoalRead(GoalBase):
     updated_at:    datetime
     current_amount: float = Field(0.0, description="Sum of all deposits")
 
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
 
 class GoalUpdate(BaseModel):
     title:         Optional[str]
@@ -41,5 +40,4 @@ class GoalDepositRead(GoalDepositBase):
     deposit_id: int
     goal_id:    int
 
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)

@@ -13,7 +13,6 @@ class Frequency(str, Enum):
 class RecurringBase(BaseModel):
     account_id: int
     amount: float
-    category_id: int
     frequency: Frequency
     start_date: datetime
     end_date: Optional[datetime] = None
@@ -33,7 +32,6 @@ class RecurringRead(RecurringBase):
 
 class RecurringUpdate(BaseModel):
     amount: Optional[float] = None
-    category_id: Optional[int] = None
     frequency: Optional[Frequency] = None
     start_date: Optional[datetime] = None
     end_date: Optional[datetime] = None

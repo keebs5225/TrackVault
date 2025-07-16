@@ -1,8 +1,8 @@
-#backend/app/routers/goals.py
+# backend/app/routers/goals.py
 from typing import List
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlmodel.ext.asyncio.session import AsyncSession
-from sqlmodel import select, func
+from sqlmodel import select, func, delete
 from datetime import datetime
 
 from app.db import get_session
@@ -13,7 +13,7 @@ from app.schemas.goal import (
 )
 from app.core.security import get_current_user
 
-router = APIRouter(prefix="/goals", tags=["goals"])
+router = APIRouter(tags=["goals"])
 
 @router.post("", response_model=GoalRead, status_code=status.HTTP_201_CREATED)
 async def create_goal(
@@ -76,11 +76,15 @@ async def delete_goal(
     g = await session.get(Goal, goal_id)
     if not g or g.user_id != current.user_id:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Goal not found")
+    # Delete all associated deposits first to avoid FK constraint errors
+    await session.exec(
+        delete(GoalDeposit).where(GoalDeposit.goal_id == goal_id)
+    )
+    # Then delete the goal
     await session.delete(g)
     await session.commit()
 
 # Deposits sub-resource
-
 @router.post(
     "/{goal_id}/deposits",
     response_model=GoalDepositRead,

@@ -8,7 +8,6 @@ export const fetchTransactions = (params: {
   start?: string;
   end?: string;
   account?: number;
-  category?: number;
 }) =>
   API.get<Paged<TransactionRead>>('/transactions', { params })
      .then(res => res.data);

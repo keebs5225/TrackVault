@@ -1,31 +1,5 @@
 // frontend/src/types.ts
 
-export interface CategoryRead {
-  category_id: number;
-  user_id: number;
-  name: string;
-  type: string;
-  parent_category_id?: number | null;
-  is_active: boolean;
-  created_at: string;
-  updated_at: string;
-  children: CategoryRead[];
-}
-
-export interface CategoryCreate {
-  name: string;
-  type?: string;
-  parent_category_id?: number | null;
-  is_active?: boolean;
-}
-
-export interface CategoryUpdate {
-  name?: string;
-  type?: string;
-  parent_category_id?: number | null;
-  is_active?: boolean;
-}
-
 export interface AccountRead {
   account_id: number;
   user_id: number;
@@ -61,7 +35,6 @@ export interface TransactionRead {
   date: string;
   description: string;
   account_id: number;
-  category_id: number;
   type: string;
   notes?: string;
   created_at: string;
@@ -73,7 +46,6 @@ export interface TransactionCreate {
   date?: string;
   description: string;
   account_id: number;
-  category_id: number;
   type?: string;
   notes?: string;
 }
@@ -83,7 +55,6 @@ export interface TransactionUpdate {
   date?: string;
   description?: string;
   account_id?: number;
-  category_id?: number;
   type?: string;
   notes?: string;
 }
@@ -96,30 +67,25 @@ export interface Paged<T> {
 }
 
 export interface BudgetRead {
-  budget_id:    number;
-  user_id:      number;
-  category_id:  number;
-  amount_limit: number;
-  period:       'weekly' | 'monthly' | 'yearly';
-  start_date:   string;
-  end_date?:    string;
-  created_at:   string;
-  updated_at:   string;
+  budget_id:   number;
+  user_id:     number;
+  section:     'income'|'fixed'|'variable'|'savings_and_debt';
+  label:       string;
+  amount:      number;
+  created_at:  string;
+  updated_at:  string;
 }
 
 export interface BudgetCreate {
-  category_id:  number;
-  amount_limit: number;
-  period:       'weekly' | 'monthly' | 'yearly';
-  start_date:   string;
-  end_date?:    string;
+  section: 'income'|'fixed'|'variable'|'savings_and_debt';
+  label:   string;
+  amount:  number;
 }
 
 export interface BudgetUpdate {
-  amount_limit?: number;
-  period?:       'weekly' | 'monthly' | 'yearly';
-  start_date?:   string;
-  end_date?:     string;
+  section?: 'income'|'fixed'|'variable'|'savings_and_debt';
+  label?:   string;
+  amount?:  number;
 }
 
 export interface RecurringRead {
@@ -127,7 +93,6 @@ export interface RecurringRead {
   user_id:        number;
   account_id:     number;
   amount:         number;
-  category_id:    number;
   frequency:      'daily' | 'weekly' | 'monthly' | 'yearly';
   start_date:     string;
   end_date?:      string;
@@ -139,7 +104,6 @@ export interface RecurringRead {
 export interface RecurringCreate {
   account_id:     number;
   amount:         number;
-  category_id:    number;
   frequency:      'daily' | 'weekly' | 'monthly' | 'yearly';
   start_date:     string;
   end_date?:      string;
@@ -148,7 +112,6 @@ export interface RecurringCreate {
 
 export interface RecurringUpdate {
   amount?:        number;
-  category_id?:   number;
   frequency?:     'daily' | 'weekly' | 'monthly' | 'yearly';
   start_date?:    string;
   end_date?:      string;
@@ -174,4 +137,12 @@ export interface GoalRead extends GoalBase {
 export interface GoalCreate extends GoalBase {}
 export interface GoalUpdate extends Partial<GoalBase> {
   current_amount?: number
+}
+
+export interface GoalDepositRead {
+  deposit_id: number;
+  goal_id:    number;
+  amount:     number;
+  date:       string;
+  note?:      string;
 }

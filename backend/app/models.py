@@ -28,7 +28,6 @@ class User(SQLModel, table=True):
 
     # backrefs
     accounts:      List["Account"]            = Relationship(back_populates="owner")
-    categories:    List["Category"]           = Relationship(back_populates="owner")
     transactions:  List["Transaction"]        = Relationship(back_populates="user")
     budgets:       List["Budget"]             = Relationship(back_populates="owner")
     recurrings:    List["RecurringTransaction"]= Relationship(back_populates="owner")
@@ -55,36 +54,6 @@ class Account(SQLModel, table=True):
     recurrings:   List["RecurringTransaction"] = Relationship(back_populates="account")
 
 
-#–––– Category ––––––––––––––––––––––––––––––––––––––––––––––––––––––––
-class Category(SQLModel, table=True):
-    __tablename__ = "category"
-
-    category_id:        int               = Field(default=None, primary_key=True)
-    user_id:            int               = Field(foreign_key="user.user_id", index=True)
-    name:               str
-    type:               str               = Field(
-        default="expense",
-        sa_column=Column("type", String, server_default="expense")
-    )
-    parent_category_id: Optional[int]     = Field(
-                             default=None,
-                             foreign_key="category.category_id",
-                             index=True
-                         )
-    created_at:         datetime          = Field(default_factory=datetime.utcnow)
-    updated_at:         datetime          = Field(default_factory=datetime.utcnow)
-
-    owner:        "User"               = Relationship(back_populates="categories")
-    parent:       Optional["Category"] = Relationship(
-                      back_populates="children",
-                      sa_relationship_kwargs={"remote_side":"Category.category_id"}
-                  )
-    children:     List["Category"]     = Relationship(back_populates="parent")
-    transactions: List["Transaction"]  = Relationship(back_populates="category")
-    budgets:      List["Budget"]       = Relationship(back_populates="category")
-    recurrings:   List["RecurringTransaction"] = Relationship(back_populates="category")
-
-
 #–––– Transaction ––––––––––––––––––––––––––––––––––––––––––––––––––––––
 class Transaction(SQLModel, table=True):
     transaction_id: int        = Field(default=None, primary_key=True)
@@ -93,7 +62,6 @@ class Transaction(SQLModel, table=True):
     date:           datetime   = Field(default_factory=datetime.utcnow)
     description:    str
     account_id:     int        = Field(foreign_key="account.account_id", index=True)
-    category_id:    int        = Field(foreign_key="category.category_id", index=True)
     type:           str        = Field(sa_column_kwargs={"server_default":"expense"})
     notes:          Optional[str] = None
     created_at:     datetime   = Field(default_factory=datetime.utcnow)
@@ -101,26 +69,27 @@ class Transaction(SQLModel, table=True):
 
     user:       "User"       = Relationship(back_populates="transactions")
     account:    Account      = Relationship(back_populates="transactions")
-    category:   Category     = Relationship(back_populates="transactions")
 
 
 #–––– Budget ––––––––––––––––––––––––––––––––––––––––––––––––––––––––––
+class Section(str, enum.Enum):
+    income           = "income"
+    fixed            = "fixed"
+    variable         = "variable"
+    savings_and_debt = "savings_and_debt"
+
 class Budget(SQLModel, table=True):
     __tablename__ = "budget"
 
-    budget_id:    int          = Field(default=None, primary_key=True)
-    user_id:      int          = Field(foreign_key="user.user_id", index=True)
-    category_id:  int          = Field(foreign_key="category.category_id")
-    amount_limit: float
-    period:       BudgetPeriod = Field(sa_column=Column(Enum(BudgetPeriod)))
-    start_date:   datetime
-    end_date:     Optional[datetime] = None
-    created_at:   datetime      = Field(default_factory=datetime.utcnow)
-    updated_at:   datetime      = Field(default_factory=datetime.utcnow)
+    budget_id:   int      = Field(default=None, primary_key=True)
+    user_id:     int      = Field(foreign_key="user.user_id", index=True)
+    section:     Section  = Field(sa_column=Column(Enum(Section)))
+    label:       str
+    amount:      float
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
 
-    owner:    "User"    = Relationship(back_populates="budgets")
-    category: Category  = Relationship(back_populates="budgets")
-
+    owner:    "User"     = Relationship(back_populates="budgets")
 
 #–––– RecurringTransaction –––––––––––––––––––––––––––––––––––––––––––––
 class RecurringTransaction(SQLModel, table=True):
@@ -130,7 +99,6 @@ class RecurringTransaction(SQLModel, table=True):
     user_id:       int        = Field(foreign_key="user.user_id", index=True)
     account_id:    int        = Field(foreign_key="account.account_id")
     amount:        float
-    category_id:   int        = Field(foreign_key="category.category_id")
     frequency:     Frequency  = Field(sa_column=Column(Enum(Frequency)))
     start_date:    datetime
     end_date:      Optional[datetime] = None
@@ -140,7 +108,6 @@ class RecurringTransaction(SQLModel, table=True):
 
     owner:    "User"              = Relationship(back_populates="recurrings")
     account:  Account             = Relationship(back_populates="recurrings")
-    category: Category            = Relationship(back_populates="recurrings")
 
 
 #–––– Goals & Deposits ––––––––––––––––––––––––––––––––––––––––––––––––

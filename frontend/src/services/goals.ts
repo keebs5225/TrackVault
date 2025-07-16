@@ -1,6 +1,6 @@
 //frontend/src/services/goals.ts
 import API from './api'
-import type { GoalRead, GoalCreate, GoalUpdate } from '../types.ts'
+import type { GoalRead, GoalCreate, GoalUpdate, GoalDepositRead } from '../types.ts'
 
 // Fetch all goals
 export function fetchGoals(): Promise<GoalRead[]> {
@@ -23,4 +23,13 @@ export function updateGoal(
 // Delete a goal
 export function deleteGoal(id: number): Promise<void> {
   return API.delete<void>(`/goals/${id}`).then(r => r.data)
+}
+
+export function addDeposit(
+  id: number,
+  amount: number
+): Promise<GoalDepositRead> {
+  return API
+    .post<GoalDepositRead>(`/goals/${id}/deposits`, { amount })
+    .then(r => r.data);
 }

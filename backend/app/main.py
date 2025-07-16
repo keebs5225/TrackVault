@@ -12,7 +12,7 @@ from app.db import engine, get_session
 from app.models import RecurringTransaction, Transaction
 
 # routers
-from app.routers import auth, users, accounts, categories, transactions
+from app.routers import auth, users, accounts, transactions
 from app.routers.budgets   import router as budgets_router
 from app.routers.recurring import router as recurring_router
 from app.routers.goals     import router as goals_router
@@ -41,7 +41,6 @@ async def on_startup():
 app.include_router(auth,           prefix="/auth",        tags=["auth"])
 app.include_router(users,          prefix="/users",       tags=["users"])
 app.include_router(accounts,       prefix="/accounts",    tags=["accounts"])
-app.include_router(categories,     prefix="/categories",  tags=["categories"])
 app.include_router(transactions,   prefix="/transactions",tags=["transactions"])
 app.include_router(budgets_router, prefix="/budgets",     tags=["budgets"])
 app.include_router(recurring_router, prefix="/recurring", tags=["recurring"])
@@ -65,7 +64,6 @@ async def run_recurring():
             tx = Transaction(
                 user_id=rec.user_id,
                 account_id=rec.account_id,
-                category_id=rec.category_id,
                 amount=rec.amount,
                 date=rec.next_run_date,
                 description=f"Recurring ({rec.frequency})",

@@ -16,7 +16,7 @@ router = APIRouter(tags=["transactions"])
 async def list_transactions(
     *,
     page: int = Query(1, ge=1),
-    page_size: int = Query(10, ge=1, le=100),
+    page_size: int = Query(10, ge=1),
     start: Optional[date] = Query(None),
     end:   Optional[date] = Query(None),
     account: Optional[int] = Query(None),

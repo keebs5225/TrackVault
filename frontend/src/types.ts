@@ -1,10 +1,11 @@
 // frontend/src/types.ts
 
+// ─── Account ───────────────────────────────────────
 export interface AccountRead {
   account_id: number;
   user_id: number;
   name: string;
-  type: string;
+  account_type: string;
   balance: number;
   currency: string;
   is_active: boolean;
@@ -14,7 +15,7 @@ export interface AccountRead {
 
 export interface AccountCreate {
   name: string;
-  type?: string;
+  account_type?: string;
   balance?: number;
   currency?: string;
   is_active?: boolean;
@@ -22,12 +23,13 @@ export interface AccountCreate {
 
 export interface AccountUpdate {
   name?: string;
-  type?: string;
+  account_type?: string;
   balance?: number;
   currency?: string;
   is_active?: boolean;
 }
 
+// ─── Transactions ───────────────────────────────────────
 export interface TransactionRead {
   transaction_id: number;
   user_id: number;
@@ -66,28 +68,6 @@ export interface Paged<T> {
   items: T[];
 }
 
-export interface BudgetRead {
-  budget_id:   number;
-  user_id:     number;
-  section:     'income'|'fixed'|'variable'|'savings_and_debt';
-  label:       string;
-  amount:      number;
-  created_at:  string;
-  updated_at:  string;
-}
-
-export interface BudgetCreate {
-  section: 'income'|'fixed'|'variable'|'savings_and_debt';
-  label:   string;
-  amount:  number;
-}
-
-export interface BudgetUpdate {
-  section?: 'income'|'fixed'|'variable'|'savings_and_debt';
-  label?:   string;
-  amount?:  number;
-}
-
 export interface RecurringRead {
   recurring_id:   number;
   user_id:        number;
@@ -116,6 +96,29 @@ export interface RecurringUpdate {
   start_date?:    string;
   end_date?:      string;
   next_run_date?: string;
+}
+
+// ─── Budgets ───────────────────────────────────────
+export interface BudgetRead {
+  budget_id:   number;
+  user_id:     number;
+  section:     'income'|'fixed'|'variable'|'savings_and_debt';
+  label:       string;
+  amount:      number;
+  created_at:  string;
+  updated_at:  string;
+}
+
+export interface BudgetCreate {
+  section: 'income'|'fixed'|'variable'|'savings_and_debt';
+  label:   string;
+  amount:  number;
+}
+
+export interface BudgetUpdate {
+  section?: 'income'|'fixed'|'variable'|'savings_and_debt';
+  label?:   string;
+  amount?:  number;
 }
 
 // ─── Goals ───────────────────────────────────────

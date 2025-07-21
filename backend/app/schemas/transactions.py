@@ -22,6 +22,7 @@ class TransactionRead(TransactionBase):
 
     class Config:
         orm_mode = True
+        from_attributes = True
 
 class TransactionUpdate(BaseModel):
     amount: Optional[float] = None

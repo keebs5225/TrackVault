@@ -8,11 +8,6 @@ const items = [
   { to: '/accounts',      label: 'Accounts',    icon: '🏦' },
   { to: '/transactions', label: 'Transactions', icon: '💳' },
   { to: '/budgets', label: 'Budgets', icon: '📊' },
-  // { to: '/calculators', label: 'Calculators', icon: '📈' },
-  // { to: '/recurring', label: 'Recurring', icon: '🔁' },
-  // { to: '/goals', label: 'Goals', icon: '🎯' },
-  { to: '/settings', label: 'Settings', icon: '⚙️' },
-  { to: '/support', label: 'Help', icon: '❓' }
 ];
 
 export default function Sidebar() {

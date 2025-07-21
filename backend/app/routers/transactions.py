@@ -44,7 +44,7 @@ async def list_transactions(
          .limit(page_size)
 
     result = await session.exec(q)
-    items = result.all()
+    items = result.scalars().all()
 
     return TransactionReadPage(
         total=total,

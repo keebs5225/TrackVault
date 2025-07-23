@@ -1,18 +1,44 @@
-# backend/app/schemas/transaction.py
+#backend/app/schemas/transactions.py
 from datetime import datetime
-from pydantic import BaseModel, Field
-from typing import Optional, List
+from typing import Optional, List, Literal
+
+from pydantic import BaseModel, Field, ConfigDict
+
 
 class TransactionBase(BaseModel):
-    amount: float
-    date: Optional[datetime] = None
-    description: str
-    account_id: int
-    type: Optional[str] = Field(default="expense")
-    notes: Optional[str] = None
+    # allow populating the field “direction” from the incoming JSON key “type”
+    model_config = ConfigDict(populate_by_name=True)
+
+    title: str = Field(..., description="A short title for the transaction")
+    description: Optional[str] = Field(None, description="Detailed description")
+    amount: float = Field(..., gt=0, description="Positive number for amount")
+
+    # this maps the JSON key "type" → Python attribute .direction
+    direction: Literal["deposit", "withdrawal"] = Field(
+        ..., alias="type", description="Whether this is a deposit or a withdrawal"
+    )
+
+    date: Optional[datetime] = Field(None, description="When the transaction occurred")
+    account_id: int = Field(..., description="ID of the associated account")
+
 
 class TransactionCreate(TransactionBase):
     pass
+
+
+class TransactionUpdate(BaseModel):
+    # same alias trick for updates
+    model_config = ConfigDict(populate_by_name=True)
+
+    title: Optional[str] = None
+    description: Optional[str] = None
+    amount: Optional[float] = Field(None, gt=0)
+    direction: Optional[Literal["deposit", "withdrawal"]] = Field(
+        None, alias="type"
+    )
+    date: Optional[datetime] = None
+    account_id: Optional[int] = None
+
 
 class TransactionRead(TransactionBase):
     transaction_id: int
@@ -20,20 +46,12 @@ class TransactionRead(TransactionBase):
     created_at: datetime
     updated_at: datetime
 
-    class Config:
-        orm_mode = True
-        from_attributes = True
+    # read straight off the ORM object
+    model_config = ConfigDict(from_attributes=True)
 
-class TransactionUpdate(BaseModel):
-    amount: Optional[float] = None
-    date: Optional[datetime] = None
-    description: Optional[str] = None
-    account_id: Optional[int] = None
-    type: Optional[str] = None
-    notes: Optional[str] = None
 
 class TransactionReadPage(BaseModel):
-    total: int
-    page: int
+    total:     int
+    page:      int
     page_size: int
-    items: List[TransactionRead]
+    items:     List[TransactionRead]

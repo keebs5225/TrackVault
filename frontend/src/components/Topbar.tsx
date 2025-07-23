@@ -5,6 +5,8 @@ import { useQuery } from '@tanstack/react-query'
 import type { AxiosError } from 'axios'
 import API from '../services/api'
 import LightDarkToggle from './LightDarkToggle'
+import '../styles/global.css'
+
 
 interface User {
   user_id: number

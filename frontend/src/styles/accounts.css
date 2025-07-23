@@ -1,0 +1,81 @@
+/* frontend/src/styles/accounts.css */
+
+.accounts-page {
+  max-width: 1000px;
+  margin: var(--space-lg) auto;
+  padding: 0 var(--space-md) var(--space-lg);
+}
+
+.accounts-page h1 {
+  font-size: var(--font-heading);
+  color: var(--color-primary);
+  text-align: center;
+  margin-bottom: var(--space-lg);
+}
+
+.accounts-page .summary {
+  margin: var(--space-sm) 0 var(--space-md);
+}
+
+.accounts-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: var(--space-md);
+  margin-top: var(--space-md);
+  align-items: start;
+}
+
+.account-card {
+  background: var(--color-muted-bg);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  padding: var(--space-md);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  transition: box-shadow .2s, transform .2s;
+}
+
+.account-card:hover {
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+}
+
+.account-card h2 {
+  margin: 0 0 var(--space-sm);
+  font-size: 1.125rem;
+  color: var(--color-text);
+}
+
+
+.account-card.is-editing {
+  grid-column: span 1;
+}
+
+@media (max-width: 799px) {
+  .account-card.is-editing {
+    grid-column: span 1;
+  }
+}
+
+/* Keep footer buttons inline while editing */
+.account-card.is-editing .tv-actions--split {
+  flex-wrap: nowrap;
+}
+
+.account-card.is-editing .tv-actions--split .left,
+.account-card.is-editing .tv-actions--split .right {
+  flex-wrap: nowrap;
+}
+
+.account-actions {
+  margin-top: auto;
+  display: flex;
+  gap: var(--space-sm);
+  flex-wrap: wrap;
+}
+
+.account-actions .left,
+.account-actions .right {
+  flex-wrap: wrap;
+}

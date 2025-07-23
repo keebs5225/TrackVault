@@ -7,6 +7,7 @@ import { FaEye, FaEyeSlash } from 'react-icons/fa'
 import API from '../services/api'
 import Spinner from '../components/Spinner'
 import '../styles/global.css'
+import '../styles/profile.css'
 
 interface User {
   user_id: number
@@ -14,10 +15,10 @@ interface User {
   email: string
 }
 
-type UpdatePayload = { 
+type UpdatePayload = {
   name: string
   email: string
-  current_password?: string 
+  current_password?: string
   new_password?: string
 }
 
@@ -53,8 +54,7 @@ export default function Profile() {
 
   const updateMutation: UseMutationResult<User, AxiosError, UpdatePayload> =
     useMutation<User, AxiosError, UpdatePayload>({
-      mutationFn: data =>
-        API.patch<User>('/users/me', data).then(res => res.data),
+      mutationFn: data => API.patch<User>('/users/me', data).then(res => res.data),
       onSuccess: updated => {
         setUser(updated)
         setEditing(false)
@@ -63,11 +63,7 @@ export default function Profile() {
         qc.invalidateQueries({ queryKey: ['user'] })
       },
       onError: err => {
-        setError(
-          typeof err.response?.data === 'string'
-            ? err.response.data
-            : 'Update failed'
-        )
+        setError(typeof err.response?.data === 'string' ? err.response.data : 'Update failed')
       },
     })
 
@@ -79,11 +75,7 @@ export default function Profile() {
         navigate('/', { replace: true })
       },
       onError: err => {
-        alert(
-          typeof err.response?.data === 'string'
-            ? err.response.data
-            : 'Could not delete account'
-        )
+        alert(typeof err.response?.data === 'string' ? err.response.data : 'Could not delete account')
       },
     })
 
@@ -97,7 +89,7 @@ export default function Profile() {
 
   return (
     <section className="profile-page">
-      <h2>Your Profile</h2>
+      <h1>Your Profile</h1>
 
       {editing ? (
         <form
@@ -115,9 +107,7 @@ export default function Profile() {
             <input
               name="name"
               value={form.name}
-              onChange={e =>
-                setForm(f => ({ ...f, name: e.target.value }))
-              }
+              onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
               required
             />
           </label>
@@ -128,9 +118,7 @@ export default function Profile() {
               name="email"
               type="email"
               value={form.email}
-              onChange={e =>
-                setForm(f => ({ ...f, email: e.target.value }))
-              }
+              onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
               required
             />
           </label>
@@ -142,13 +130,8 @@ export default function Profile() {
                 name="current_password"
                 type={showCurrent ? 'text' : 'password'}
                 autoComplete="current-password"
-                value={form.current_password || ''}
-                onChange={e =>
-                  setForm(f => ({
-                    ...f,
-                    current_password: e.target.value,
-                  }))
-                }
+                value={form.current_password}
+                onChange={e => setForm(f => ({ ...f, current_password: e.target.value }))}
                 placeholder="••••••••"
               />
               <button
@@ -169,10 +152,8 @@ export default function Profile() {
                 name="new_password"
                 type={showNew ? 'text' : 'password'}
                 autoComplete="new-password"
-                value={form.new_password || ''}
-                onChange={e =>
-                  setForm(f => ({ ...f, new_password: e.target.value }))
-                }
+                value={form.new_password}
+                onChange={e => setForm(f => ({ ...f, new_password: e.target.value }))}
                 placeholder="••••••••"
               />
               <button
@@ -186,55 +167,75 @@ export default function Profile() {
             </div>
           </label>
 
-          <div className="profile-actions">
-            <button
-              type="submit"
-              disabled={updateMutation.status === 'pending'}
-            >
-              {updateMutation.status === 'pending' ? <Spinner /> : 'Save'}
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setEditing(false)
-                if (user)
-                  setForm({ name: user.name, email: user.email })
-                setError(null)
-              }}
-            >
-              Cancel
-            </button>
+          {/* ------- Footer with delete on left, save/cancel on right ------- */}
+          <div className="tv-actions--split">
+            <div className="left">
+              <button
+                type="button"
+                className="btn btn-danger"
+                onClick={() => {
+                  if (window.confirm('Delete account? This is irreversible.')) {
+                    deleteMutation.mutate()
+                  }
+                }}
+                disabled={deleteMutation.status === 'pending'}
+              >
+                {deleteMutation.status === 'pending' ? '…' : 'Delete Account'}
+              </button>
+            </div>
+            <div className="right">
+              <button
+                type="submit"
+                className="btn btn-primary"
+                disabled={updateMutation.status === 'pending'}
+              >
+                {updateMutation.status === 'pending' ? <Spinner /> : 'Save'}
+              </button>
+              <button
+                type="button"
+                className="btn btn-secondary"
+                onClick={() => {
+                  setEditing(false)
+                  setForm({
+                    name: user?.name || '',
+                    email: user?.email || '',
+                    current_password: '',
+                    new_password: '',
+                  })
+                  setError(null)
+                }}
+              >
+                Cancel
+              </button>
+            </div>
           </div>
         </form>
       ) : (
-        <div className="profile-form">
-          <p>
-            <strong>Name:</strong> {user?.name}
-          </p>
-          <p>
-            <strong>Email:</strong> {user?.email}
-          </p>
-          <div className="profile-actions">
-            <button onClick={() => setEditing(true)}>
+        <>
+          <div className="profile-details">
+            <label>Name:</label>
+            <span>{user?.name}</span>
+
+            <label>Email:</label>
+            <span>{user?.email}</span>
+          </div>
+
+          {/* View-mode actions aligned right */}
+          <div className="tv-actions">
+            <button
+              className="btn btn-primary"
+              onClick={() => setEditing(true)}
+            >
               Edit Info
             </button>
-            <button onClick={handleLogout}>Log Out</button>
             <button
-              className="btn-danger"
-              onClick={() => {
-                if (
-                  window.confirm(
-                    'Delete account? This is irreversible.'
-                  )
-                ) {
-                  deleteMutation.mutate()
-                }
-              }}
+              className="btn btn-secondary"
+              onClick={handleLogout}
             >
-              Delete Account
+              Log Out
             </button>
           </div>
-        </div>
+        </>
       )}
     </section>
   )

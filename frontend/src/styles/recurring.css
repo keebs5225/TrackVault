@@ -1,0 +1,55 @@
+/* frontend/src/styles/recurring.css */
+
+/* Page wrapper */
+.recurring-page {
+  max-width: 900px;
+  margin: var(--space-lg) auto;
+  padding: 0 var(--space-md) var(--space-lg);
+}
+.recurring-page h1 {
+  font-size: var(--font-heading);
+  color: var(--color-primary);
+  text-align: center;
+  margin-bottom: var(--space-lg);
+}
+
+.recurring-page .summary {
+  margin: var(--space-sm) 0 var(--space-md);
+}
+
+/* Grid of recurring items */
+.recurring-grid {
+  display: grid;
+  gap: var(--space-md);
+}
+
+/* Individual recurring card */
+.recurring-card {
+  background: var(--color-muted-bg);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  padding: var(--space-md);
+  display: flex;
+  flex-direction: column;
+  transition: box-shadow .2s, transform .2s;
+}
+.recurring-card:hover {
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+}
+.recurring-card h2 {
+  font-size: 1.125rem;
+  margin: 0 0 var(--space-sm);
+  color: var(--color-text);
+}
+
+.recurring-details p {
+  margin: var(--space-xs) 0;
+  color: var(--color-text);
+}
+.recurring-actions {
+  margin-top: auto;
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-sm);
+}

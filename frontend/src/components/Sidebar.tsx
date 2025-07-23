@@ -1,26 +1,30 @@
 // frontend/src/components/Sidebar.tsx
 import React from 'react';
 import { NavLink } from 'react-router-dom';
+import '../styles/global.css'
+
 
 const items = [
-  { to: '/dashboard', label: 'Home', icon: '🏠' },
-  { to: '/profile', label: 'Profile', icon: '👤' },
-  { to: '/accounts',      label: 'Accounts',    icon: '🏦' },
+  { to: '/dashboard', label: 'DashBoard', icon: '🏠' },
+  { to: '/profile',   label: 'Profile',   icon: '👤' },
+  { to: '/accounts',  label: 'Accounts',  icon: '🏦' },
   { to: '/transactions', label: 'Transactions', icon: '💳' },
-  { to: '/budgets', label: 'Budgets', icon: '📊' },
+  { to: '/budgets',   label: 'Budgets',   icon: '📊' },
 ];
 
 export default function Sidebar() {
   return (
     <nav className="sidebar">
-      <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+      <ul className="sidebar-list">
         {items.map(item => (
-          <li key={item.to} style={{ margin: '1rem 0' }}>
+          <li key={item.to} className="sidebar-list-item">
             <NavLink
               to={item.to}
-              style={({ isActive }) => ({ color: isActive ? '#333' : '#555', fontWeight: isActive ? 'bold' : 'normal' })}
+              className={({ isActive }) =>
+                `nav-link${isActive ? ' active' : ''}`
+              }
             >
-              <span style={{ marginRight: '0.5rem' }}>{item.icon}</span>
+              <span className="nav-icon">{item.icon}</span>
               {item.label}
             </NavLink>
           </li>

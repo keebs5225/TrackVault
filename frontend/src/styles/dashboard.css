@@ -1,0 +1,54 @@
+/* frontend/src/styles/dashboard.css */
+
+/* Page wrapper */
+.dashboard-page {
+  padding: var(--space-md);
+}
+.dashboard-page h1 {
+  font-size: var(--font-heading);
+  color: var(--color-primary);
+  text-align: center;
+  margin-bottom: var(--space-lg);
+}
+
+/* Summary cards row */
+.summary-cards {
+  display: flex;
+  gap: var(--space-md);
+  margin-bottom: var(--space-lg);
+}
+.summary-cards .card {
+  flex: 1;
+  padding: var(--space-md);
+  text-align: center;
+}
+
+/* Budget overview card sections */
+.overview-section {
+  margin-bottom: var(--space-md);
+}
+.overview-section h3 {
+  margin-bottom: var(--space-sm);
+  color: var(--color-text);
+}
+
+/* Progress rows inside overview/goals blocks */
+.progress-item {
+  margin-bottom: var(--space-sm);
+}
+
+/* Recurring mini-list */
+.recurring-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.recurring-list li {
+  margin-bottom: var(--space-sm);
+}
+
+/* Optional: keep card headings inside dashboard from being forced globally */
+.dashboard-page .card h2 {
+  margin-top: 0;
+  color: var(--color-primary);
+}

@@ -1,8 +1,9 @@
-#backend/app/schemas/recurring.py
+# backend/app/schemas/recurring.py
+from enum import Enum
 from datetime import datetime
 from typing import Optional
 from pydantic import BaseModel, Field
-from enum import Enum
+from app.models import TransactionDirection
 
 class Frequency(str, Enum):
     daily   = "daily"
@@ -13,13 +14,26 @@ class Frequency(str, Enum):
 class RecurringBase(BaseModel):
     account_id: int
     amount: float
+    direction: TransactionDirection              
     frequency: Frequency
     start_date: datetime
     end_date: Optional[datetime] = None
     next_run_date: datetime
-
+    title: Optional[str] = None
+    description: Optional[str] = None
 class RecurringCreate(RecurringBase):
     pass
+
+class RecurringUpdate(BaseModel):
+    account_id: Optional[int] = None
+    amount: Optional[float] = None
+    direction: Optional[TransactionDirection] = None
+    frequency: Optional[Frequency] = None
+    start_date: Optional[datetime] = None
+    end_date: Optional[datetime] = None
+    next_run_date: Optional[datetime] = None
+    title: Optional[str] = None
+    description: Optional[str] = None
 
 class RecurringRead(RecurringBase):
     recurring_id: int
@@ -29,10 +43,3 @@ class RecurringRead(RecurringBase):
 
     class Config:
         orm_mode = True
-
-class RecurringUpdate(BaseModel):
-    amount: Optional[float] = None
-    frequency: Optional[Frequency] = None
-    start_date: Optional[datetime] = None
-    end_date: Optional[datetime] = None
-    next_run_date: Optional[datetime] = None

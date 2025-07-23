@@ -6,6 +6,7 @@ import API from '../services/api'
 import { useNavigate } from 'react-router-dom'
 import Spinner from '../components/Spinner'
 import '../styles/global.css';
+import '../styles/signup.css';
 
 
 interface SignupForm {
@@ -42,7 +43,7 @@ export default function Signup() {
   }
 
   return (
-    <form onSubmit={handleSubmit}>
+    <form onSubmit={handleSubmit} className="signup-form">
       <h2>Sign Up</h2>
 
       <input

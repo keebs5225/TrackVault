@@ -1,63 +1,193 @@
 // frontend/src/pages/Dashboard.tsx
 import React from 'react'
 import { useQuery } from '@tanstack/react-query'
+import Spinner from '../components/Spinner'
+import { fetchBudgets } from '../services/budgets'
+import { fetchTransactions } from '../services/transactions'
+import { fetchGoals } from '../services/goals'
+import { fetchRecurring } from '../services/recurring'
+import type {BudgetRead, Paged, TransactionRead, GoalRead, RecurringRead } from '../types'
 import '../styles/global.css'
+import '../styles/dashboard.css'
 
-interface Summary {
-  totalIncome: number
-  totalExpenses: number
-  leftover: number
+
+function capitalize(str: string) {
+  return str.charAt(0).toUpperCase() + str.slice(1)
 }
 
 export default function Dashboard() {
-  const { data: summary = { totalIncome: 0, totalExpenses: 0, leftover: 0 } } =
-    useQuery<Summary, Error>({
-      queryKey: ['budget-summary'],
-      // BudgetsPage will inject real data via setQueryData
-      queryFn: () => ({
-        totalIncome: 0,
-        totalExpenses: 0,
-        leftover: 0,
-      }),
-      initialData: {
-        totalIncome: 0,
-        totalExpenses: 0,
-        leftover: 0,
-      },
+  // ── Data fetching ────────────────────────────────
+  const { data: budgets = [], isLoading: bLoad, isError: bErr, error: bErrMsg } =
+    useQuery<BudgetRead[], Error>({ queryKey: ['budgets'], queryFn: fetchBudgets })
+  const {
+    data: txPage = { items: [], total: 0, page: 1, page_size: 5 },
+    isLoading: tLoad,
+    isError: tErr,
+    error: tErrMsg,
+  } = useQuery<Paged<TransactionRead>, Error>({
+    queryKey: ['transactions', { page: 1, page_size: 5 }],
+    queryFn: () => fetchTransactions({ page: 1, page_size: 5 }),
+  })
+  const { data: goals = [], isLoading: gLoad, isError: gErr, error: gErrMsg } =
+    useQuery<GoalRead[], Error>({ queryKey: ['goals'], queryFn: fetchGoals })
+  const { data: recs = [], isLoading: rLoad, isError: rErr, error: rErrMsg } =
+    useQuery<RecurringRead[], Error>({
+      queryKey: ['recurring'],
+      queryFn: fetchRecurring,
     })
 
+  if (bLoad || tLoad || gLoad || rLoad) return <Spinner />
+  if (bErr || tErr || gErr || rErr)
+    return (
+      <p className="error-message">
+        {bErrMsg?.message || tErrMsg?.message || gErrMsg?.message || rErrMsg?.message}
+      </p>
+    )
+
+  // ── Summary calculations ─────────────────────────
+  const totalIncome   = budgets.filter(b => b.section === 'income').reduce((s, b) => s + b.amount, 0)
+  const totalExpenses = budgets.filter(b => b.section !== 'income').reduce((s, b) => s + b.amount, 0)
+  const leftover      = totalIncome - totalExpenses
+
+  // —— Budget groups ——  
+  const incomeB   = budgets.filter(b => b.section === 'income')
+  const fixedB    = budgets.filter(b => b.section === 'fixed')
+  const variableB = budgets.filter(b => b.section === 'variable')
+
+  const renderBars = (items: BudgetRead[], base: number) =>
+    items.map(b => {
+      const pct = Math.floor((b.amount / (base || 1)) * 100)
+      return (
+        <div key={b.budget_id} className="progress-item">
+          <strong>{capitalize(b.label || '')}</strong> — {pct}%
+          <progress className="progress" value={pct} max={100} />
+        </div>
+      )
+    })
+
+  // —— Next recurring ——  
+  const upcoming = recs
+    .slice()
+    .sort(
+      (a, b) =>
+        new Date(a.next_run_date).getTime() - new Date(b.next_run_date).getTime()
+    )
+    .slice(0, 3)
+
   return (
-    <section>
+    <section className="dashboard-page">
       <h1>Dashboard</h1>
 
-      <h2>Summary</h2>
+      {/* Summary Cards */}
       <div className="summary-cards">
-        <div className="project-item">
-          <strong>Total Income</strong><br/>
-          ${summary.totalIncome.toFixed(2)}
+        <div className="card">
+          <strong>Total Income</strong>
+          <p>${totalIncome.toFixed(2)}</p>
         </div>
-        <div className="project-item">
-          <strong>Total Expenses</strong><br/>
-          ${summary.totalExpenses.toFixed(2)}
+        <div className="card">
+          <strong>Total Expenses</strong>
+          <p>${totalExpenses.toFixed(2)}</p>
         </div>
-        <div className="project-item">
-          <strong>Leftover Buffer</strong><br/>
-          ${summary.leftover.toFixed(2)}
+        <div className="card">
+          <strong>Leftover Buffer</strong>
+          <p>${leftover.toFixed(2)}</p>
         </div>
       </div>
 
-      <h3>Recent Transactions</h3>
-      <div className="project-item">[Table Placeholder]</div>
+      {/* Budget Overview */}
+      <div className="card">
+        <h2>Budget Overview</h2>
+        <div className="overview-section">
+          <h3>Income</h3>
+          {renderBars(incomeB, totalIncome)}
+        </div>
+        <div className="overview-section">
+          <h3>Fixed Expenses</h3>
+          {renderBars(fixedB, totalExpenses)}
+        </div>
+        <div className="overview-section">
+          <h3>Variable Expenses</h3>
+          {renderBars(variableB, totalExpenses)}
+        </div>
+      </div>
 
-      <h3>Budget Overview</h3>
-      <div className="project-item">[Progress Bars Placeholder]</div>
+      {/* Recent Transactions */}
+      <div className="card">
+        <h2>Recent Transactions</h2>
+        <table className="transactions-table">
+          <thead>
+            <tr>
+              <th>Title</th>
+              <th>Date</th>
+              <th>Amt</th>
+              <th>Types of Transaction</th>
+            </tr>
+          </thead>
+          <tbody>
+            {txPage.items.map(tx => (
+              <tr key={tx.transaction_id}>
+                <td>{capitalize(tx.title)}</td>
+                <td>{new Date(tx.date).toLocaleDateString()}</td>
+                <td>${tx.amount.toFixed(2)}</td>
+                <td>{tx.direction.toUpperCase()}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
 
-      <h3>Charts</h3>
-      <div className="project-item">[Monthly Trends Bar Chart]</div>
-      <div className="project-item">[Income vs Expense Line Chart]</div>
+     {/* Upcoming Recurring  */}
+      <div className="card">
+        <h2>Upcoming Recurring</h2>
 
-      <h3>Upcoming Recurring</h3>
-      <div className="project-item">[Next 3 Entries Placeholder]</div>
+        <table className="transactions-table recurring-table">
+          <thead>
+            <tr>
+              <th>Title</th>
+              <th>Date</th>
+              <th>Amt</th>
+              <th>Freq</th>
+              <th>Types of Transaction</th>
+            </tr>
+          </thead>
+          <tbody>
+            {recs
+              .slice()                                   // copy
+              .sort((a, b) => new Date(a.next_run_date).getTime() - new Date(b.next_run_date).getTime())
+              .slice(0, 5)                               // show first 5
+              .map(r => (
+                <tr key={r.recurring_id}>
+                  <td>{capitalize((r as any).title || r.title || '—')}</td>
+                  <td>{new Date(r.next_run_date || r.start_date).toLocaleDateString()}</td>
+                  <td>${r.amount.toFixed(2)}</td>
+                  <td>{r.frequency.toUpperCase()}</td>
+                  <td>{r.direction.toUpperCase()}</td>
+                </tr>
+              ))}
+            {recs.length === 0 && (
+              <tr>
+                <td colSpan={4} style={{ textAlign: 'center', padding: '12px 0' }}>
+                  No upcoming recurring transactions
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Goals */}
+      <div className="card">
+        <h2>Goals</h2>
+        {goals.map(g => {
+          const pct = Math.floor((g.current_amount / g.target_amount) * 100)
+          return (
+            <div key={g.goal_id} className="progress-item">
+              <strong>{g.title}</strong> — {pct}%
+              <progress className="progress" value={pct} max={100} />
+            </div>
+          )
+        })}
+      </div>
     </section>
   )
 }

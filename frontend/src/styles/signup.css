@@ -1,0 +1,39 @@
+/* frontend/src/styles/signup.css */
+
+/* Centered auth form */
+.signup-form {
+  max-width: 400px;
+  margin: var(--space-lg) auto;
+  padding: var(--space-lg) var(--space-md);
+  background: var(--color-muted-bg);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.signup-form h2 {
+  margin: 0 0 var(--space-md);
+  text-align: center;
+  color: var(--color-primary);
+}
+
+.signup-form input {
+  width: 100%;
+  padding: var(--space-sm);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  margin-top: var(--space-xs);
+}
+
+.signup-form button {
+  align-self: center;
+}
+
+/* Dark mode */
+body.dark .signup-form {
+  background: #1e1e1e;
+  color: #e0e0e0;
+  box-shadow: none;
+}

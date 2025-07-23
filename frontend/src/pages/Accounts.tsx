@@ -2,8 +2,15 @@
 import React, { useState, FormEvent } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import Spinner from '../components/Spinner'
-import { fetchAccounts, createAccount, updateAccount, deleteAccount } from '../services/accounts'
+import {
+  fetchAccounts,
+  createAccount,
+  updateAccount,
+  deleteAccount,
+} from '../services/accounts'
 import type { AccountRead, AccountCreate, AccountUpdate } from '../types'
+import '../styles/global.css'
+import '../styles/accounts.css'
 
 function capitalize(str: string) {
   return str.charAt(0).toUpperCase() + str.slice(1)
@@ -12,7 +19,7 @@ function capitalize(str: string) {
 export default function AccountsPage(): JSX.Element {
   const qc = useQueryClient()
 
-  // ── Fetch list of accounts ──────────────────────────
+  // ── Fetch accounts ───────────────────────────────────
   const {
     data: accounts = [],
     isLoading,
@@ -23,26 +30,40 @@ export default function AccountsPage(): JSX.Element {
     queryFn: fetchAccounts,
   })
 
-  // ── Mutations ────────────────────────────────────────
+  // ── Mutations (modeled after Transactions) ───────────
   const createMut = useMutation<AccountRead, Error, AccountCreate>({
     mutationFn: createAccount,
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['accounts'] })
       setShowForm(false)
+      setNewForm({
+        name: '',
+        account_type: 'checking',
+        balance: 0,
+        currency: 'USD',
+        is_active: true,
+      })
     },
   })
 
-   const updateMut = useMutation<AccountRead, Error, { id: number; data: AccountUpdate }>({
+  const updateMut = useMutation<AccountRead, Error, { id: number; data: AccountUpdate }>({
     mutationFn: ({ id, data }) => updateAccount(id, data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['accounts'] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['accounts'] })
+    },
+    onError: err => {
+      console.error('Update failed:', err)
+    },
   })
 
   const deleteMut = useMutation<void, Error, number>({
     mutationFn: deleteAccount,
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['accounts'] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['accounts'] })
+    },
   })
 
-  // ── UI state ────────────────────────────────────────
+  // ── UI state ─────────────────────────────────────────
   const [showForm, setShowForm] = useState(false)
   const [newForm, setNewForm] = useState<AccountCreate>({
     name: '',
@@ -51,53 +72,68 @@ export default function AccountsPage(): JSX.Element {
     currency: 'USD',
     is_active: true,
   })
+
   const [editing, setEditing] = useState<Record<number, boolean>>({})
   const [editForm, setEditForm] = useState<Record<number, AccountUpdate>>({})
 
-  if (isLoading) return <Spinner />
-  if (isError) return <p style={{ color: 'crimson' }}>{error.message}</p>
+  if (isLoading) {
+    return (
+      <section className="accounts-page">
+        <Spinner />
+      </section>
+    )
+  }
+
+  if (isError) {
+    return (
+      <section className="accounts-page">
+        <h1>Your Accounts</h1>
+        <p className="error-message">{error.message}</p>
+      </section>
+    )
+  }
 
   // ── Summary ─────────────────────────────────────────
-  const totalBalance = accounts
-    .reduce((sum, a) => sum + a.balance, 0)
-    .toFixed(2)
+  const totalBalance = accounts.reduce((sum, a) => sum + a.balance, 0).toFixed(2)
 
   return (
     <section className="accounts-page">
-      <h2>Accounts</h2>
+      <h1>Your Accounts</h1>
 
-      {/* Toggle add form */}
-      <button onClick={() => setShowForm(f => !f)}>
-        {showForm ? 'Cancel' : '+ Add Account'}
+      <button
+        className={`btn ${showForm ? 'btn-secondary' : 'btn-primary'}`}
+        onClick={() => setShowForm(f => !f)}
+      >
+        {showForm ? 'Close Form' : '+ New Account'}
       </button>
 
-      {/* Summary */}
-      <p style={{ marginTop: 8 }}>
+      <p className="summary">
         Total Accounts: {accounts.length} | Total Balance: ${totalBalance}
       </p>
 
-      {/* Add-account form */}
       {showForm && (
         <form
           onSubmit={(e: FormEvent) => {
             e.preventDefault()
             createMut.mutate(newForm)
           }}
-          style={{ margin: '1rem 0', display: 'flex', gap: 8, flexWrap: 'wrap' }}
+          className="card tv-form-card tv-form"
         >
-          <label>
-            Name<br/>
+          <label className="tv-field">
+            <span className="tv-label">Title</span>
             <input
-              placeholder="Name"
+              className="tv-input"
+              placeholder="Account name"
               value={newForm.name}
               onChange={e => setNewForm(f => ({ ...f, name: e.target.value }))}
               required
             />
           </label>
 
-          <label>
-            Type<br/>
+          <label className="tv-field">
+            <span className="tv-label">Type of Account</span>
             <select
+              className="tv-select"
               value={newForm.account_type}
               onChange={e =>
                 setNewForm(f => ({
@@ -113,56 +149,52 @@ export default function AccountsPage(): JSX.Element {
             </select>
           </label>
 
-          <label>
-            Balance<br/>
+          <label className="tv-field">
+            <span className="tv-label">Balance</span>
             <input
+              className="tv-input"
               type="number"
               step="0.01"
               value={newForm.balance}
-              onChange={e =>
-                setNewForm(f => ({ ...f, balance: +e.target.value }))
-              }
+              onChange={e => setNewForm(f => ({ ...f, balance: +e.target.value }))}
             />
           </label>
 
-          <button type="submit" disabled={createMut.status == 'pending'}>
-            {createMut.status == 'pending' ? <Spinner /> : 'Create'}
-          </button>
+          <div className="tv-actions">
+            <button
+              type="submit"
+              className="btn btn-primary"
+              disabled={createMut.status === 'pending'}
+            >
+              {createMut.status === 'pending' ? <Spinner /> : 'Create Account'}
+            </button>
+          </div>
         </form>
       )}
 
-      {/* Account cards */}
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fill,minmax(240px,1fr))',
-          gap: 16,
-          marginTop: 16,
-        }}
-      >
+      <div className="accounts-grid">
         {accounts.map(a => {
           const isEdit = !!editing[a.account_id]
           const base: AccountUpdate = {
-            name:          a.name,
-            account_type:  a.account_type,
-            balance:       a.balance,
-            currency:      a.currency,
-            is_active:     a.is_active,
+            name: a.name,
+            account_type: a.account_type,
+            balance: a.balance,
+            currency: a.currency,
+            is_active: a.is_active,
           }
-          
           const form = editForm[a.account_id] ?? base
 
           return (
             <div
               key={a.account_id}
-              style={{ border: '1px solid #ccc', padding: 16, borderRadius: 8 }}
+              className={`account-card ${isEdit ? 'is-editing' : ''}`}
             >
               {isEdit ? (
                 <>
-                  {/* Inline edit form with labels */}
-                  <label>
-                    Name 
+                  <label className="tv-field">
+                    <span className="tv-label">Title</span>
                     <input
+                      className="tv-input"
                       value={form.name}
                       onChange={e =>
                         setEditForm(f => ({
@@ -171,12 +203,12 @@ export default function AccountsPage(): JSX.Element {
                         }))
                       }
                     />
-                    <br/>
                   </label>
 
-                  <label>
-                    Type
+                  <label className="tv-field">
+                    <span className="tv-label">Type of Account</span>
                     <select
+                      className="tv-select"
                       value={form.account_type}
                       onChange={e =>
                         setEditForm(f => ({
@@ -193,73 +225,71 @@ export default function AccountsPage(): JSX.Element {
                       <option value="credit">Credit</option>
                       <option value="cash">Cash</option>
                     </select>
-                    <br/>
                   </label>
 
-                  <label>
-                    Balance
+                  <label className="tv-field">
+                    <span className="tv-label">Balance</span>
                     <input
+                      className="tv-input"
                       type="number"
                       step="0.01"
                       value={form.balance}
                       onChange={e =>
                         setEditForm(f => ({
                           ...f,
-                          [a.account_id]: {
-                            ...form,
-                            balance: +e.target.value,
-                          },
+                          [a.account_id]: { ...form, balance: +e.target.value },
                         }))
                       }
                     />
-                    <br/>
                   </label>
 
-
-                  <div style={{ marginTop: 8, display: 'flex', gap: 8 }}>
-                    <button
-                      onClick={() =>
-                        updateMut.mutate({ id: a.account_id, data: form })
-                      }
-                      disabled={updateMut.status == 'pending'}
-                    >
-                      {updateMut.status == 'pending' ? '…' : 'Save'}
-                    </button>
-                    <button
-                      onClick={() =>
-                        setEditing(e => ({ ...e, [a.account_id]: false }))
-                      }
-                    >
-                      Cancel
-                    </button>
+                  <div className="tv-actions--split">
+                    <div className="left">
+                      <button
+                        className="btn btn-danger"
+                        onClick={() => deleteMut.mutate(a.account_id)}
+                        disabled={deleteMut.status === 'pending'}
+                      >
+                        {deleteMut.status === 'pending' ? '…' : 'Delete'}
+                      </button>
+                    </div>
+                    <div className="right">
+                      <button
+                        className="btn btn-primary"
+                        onClick={() => {
+                          updateMut.mutate({ id: a.account_id, data: form })
+                          setEditing(e => ({ ...e, [a.account_id]: false }))
+                        }}
+                        disabled={updateMut.status === 'pending'}
+                      >
+                        {updateMut.status === 'pending' ? '…' : 'Save'}
+                      </button>
+                      <button
+                        className="btn btn-secondary"
+                        onClick={() =>
+                          setEditing(e => ({ ...e, [a.account_id]: false }))
+                        }
+                      >
+                        Discard
+                      </button>
+                    </div>
                   </div>
                 </>
               ) : (
                 <>
-                  {/* Read-only view */}
-                  <h4>{a.name}</h4>
-                  <p>
-                    <strong>Type:</strong> {capitalize(a.account_type)}
-                  </p>
-                  <p>
-                    <strong>Balance:</strong> ${a.balance.toFixed(2)}{' '}
-                    {a.currency}
-                  </p>
+                  <h2>{a.name}</h2>
+                  <p><strong>Type:</strong> {capitalize(a.account_type)}</p>
+                  <p><strong>Balance:</strong> ${a.balance.toFixed(2)} {a.currency}</p>
 
-                  <div style={{ marginTop: 8, display: 'flex', gap: 8 }}>
+                  <div className="tv-actions">
                     <button
+                      className="btn btn-primary"
                       onClick={() => {
                         setEditForm(f => ({ ...f, [a.account_id]: base }))
                         setEditing(e => ({ ...e, [a.account_id]: true }))
                       }}
                     >
                       Edit
-                    </button>
-                    <button
-                      onClick={() => deleteMut.mutate(a.account_id)}
-                      disabled={deleteMut.status == 'pending'}
-                    >
-                      {deleteMut.status == 'pending' ? '…' : 'Delete'}
                     </button>
                   </div>
                 </>

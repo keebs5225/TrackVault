@@ -1,0 +1,94 @@
+/* frontend/src/styles/goals.css */
+
+/* Page wrapper */
+.goals-page {
+  max-width: 800px;
+  margin: var(--space-lg) auto;
+  padding: 0 var(--space-md) var(--space-lg);
+}
+.goals-page h1 {
+  font-size: var(--font-heading);
+  color: var(--color-primary);
+  text-align: center;
+  margin-bottom: var(--space-lg);
+}
+
+/* Toggle/Add button spacing */
+.goals-page > .btn {
+  margin-bottom: var(--space-md);
+}
+
+/* Goals grid */
+.goals-grid {
+  display: grid;
+  gap: var(--space-md);
+  margin-top: var(--space-md);
+}
+
+/* Individual goal card */
+.goal-card {
+  background: var(--color-muted-bg);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  padding: var(--space-md);
+  display: flex;
+  flex-direction: column;
+  transition: box-shadow .2s, transform .2s;
+}
+.goal-card:hover {
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+}
+.goal-card h2 {
+  margin: 0 0 var(--space-sm);
+  font-size: 1.125rem;
+  color: var(--color-text);
+}
+.goal-card p { margin: var(--space-xs) 0; }
+
+/* Progress bar */
+.progress-bar {
+  height: 12px;
+  border-radius: var(--radius-sm);
+  background: var(--color-border);
+  overflow: hidden;
+}
+.progress-bar::-webkit-progress-value {
+  background: var(--color-primary);
+}
+
+/* ---------------------------
+   Footer when NOT editing
+   (Amount input + Deposit + Withdraw + Edit)
+--------------------------- */
+.goal-footer{
+  display:flex;
+  align-items:center;
+  gap:var(--space-sm);
+  flex-wrap:wrap;              /* wrap on very narrow screens */
+  margin-top:var(--space-md);
+}
+
+/* Reuse the same input/button styles */
+.goal-footer .deposit-actions{
+  margin:0;                    /* override default top margin */
+  display:flex;
+  align-items:center;
+  gap:var(--space-sm);
+  flex:1 1 auto;
+}
+
+.goal-amt-input{
+  flex:0 0 clamp(110px, 25vw, 220px);
+}
+
+/* Push the Edit button to the far right */
+.goal-footer .edit-btn{
+  margin-left:auto;
+}
+
+/* Dark mode tweaks overides global dark styles */
+body.dark .goal-card{
+  background: var(--color-muted-bg);
+  box-shadow: var(--shadow-sm);
+}

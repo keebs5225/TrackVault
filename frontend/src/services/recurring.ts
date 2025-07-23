@@ -1,20 +1,22 @@
-//frontend/src/services/recurring.ts
+// frontend/src/services/recurring.ts
 import API from './api'
-import type { RecurringRead, RecurringCreate, RecurringUpdate} from '../types.ts'
+import type { RecurringRead, RecurringCreate, RecurringUpdate } from '../types'
 
-export const fetchRecurring = (): Promise<RecurringRead[]> =>
-  API.get<RecurringRead[]>('/recurring').then(r => r.data)
+export function fetchRecurring(): Promise<RecurringRead[]> {
+  return API.get<RecurringRead[]>('/recurring').then(r => r.data)
+}
 
-export const createRecurring = (
-  r: RecurringCreate
-): Promise<RecurringRead> =>
-  API.post<RecurringRead>('/recurring', r).then(rsp => rsp.data)
+export function createRecurring(r: RecurringCreate): Promise<RecurringRead> {
+  return API.post<RecurringRead>('/recurring', r).then(rsp => rsp.data)
+}
 
-export const updateRecurring = (
+export function updateRecurring(
   id: number,
   r: RecurringUpdate
-): Promise<RecurringRead> =>
-  API.patch<RecurringRead>(`/recurring/${id}`, r).then(rsp => rsp.data)
+): Promise<RecurringRead> {
+  return API.patch<RecurringRead>(`/recurring/${id}`, r).then(rsp => rsp.data)
+}
 
-export const deleteRecurring = (id: number): Promise<void> =>
-  API.delete<void>(`/recurring/${id}`).then(r => r.data)
+export function deleteRecurring(id: number): Promise<void> {
+  return API.delete<void>(`/recurring/${id}`).then(() => {})
+}

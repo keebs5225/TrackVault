@@ -1,0 +1,37 @@
+/* frontend/src/styles/transactions.css */
+
+/* Page wrapper */
+.transactions-page {
+  max-width: 900px;
+  margin: var(--space-lg) auto;
+  padding: 0 var(--space-md) var(--space-lg);
+}
+.transactions-page h1 {
+  font-size: var(--font-heading);
+  color: var(--color-primary);
+  text-align: center;
+  margin-bottom: var(--space-lg);
+}
+
+.transactions-page .summary {
+  margin: var(--space-sm) 0 var(--space-md);
+}
+
+/* Grid of transactions */
+.transactions-grid {
+  display: grid;
+  gap: var(--space-md);
+}
+
+/* Individual transaction card */
+.transaction-card {
+  background: var(--color-muted-bg);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  padding: var(--space-md);
+  transition: box-shadow .2s, transform .2s;
+}
+.transaction-card:hover {
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+}

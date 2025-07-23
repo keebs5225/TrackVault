@@ -6,6 +6,7 @@ import API from '../services/api'
 import { useNavigate, useLocation } from 'react-router-dom'
 import Spinner from '../components/Spinner'
 import '../styles/global.css'
+import '../styles/login.css'
 
 interface LoginForm {
   username: string
@@ -66,9 +67,7 @@ export default function Login() {
   return (
     <form onSubmit={handleSubmit} className="profile-form">
       <h2>Log In</h2>
-      {flash && (
-        <div style={{ color: 'crimson', marginBottom: '1rem' }}>{flash}</div>
-      )}
+      {flash && <div className="flash-message">{flash}</div>}
 
       <label>
         Email

@@ -1,0 +1,139 @@
+/* Page wrapper */
+.calculators-page {
+  max-width: 900px;
+  margin: var(--space-lg) auto;
+  padding: 0 var(--space-md) var(--space-lg);
+}
+.calculators-page h1 {
+  font-size: var(--font-heading);
+  color: var(--color-primary);
+  text-align: center;
+  margin-bottom: var(--space-lg);
+}
+
+/* Grid of calculator cards */
+.calculators-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px,1fr));
+  gap: var(--space-md);
+}
+
+/* Card */
+.calculator-card {
+  background: var(--color-muted-bg);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  padding: var(--space-md);
+  transition: box-shadow .2s, transform .2s;
+  display: flex;
+  flex-direction: column;
+}
+.calculator-card:hover {
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+}
+
+/* Fieldset reset */
+.calculators-fieldset {
+  border: none;
+  padding: 0;
+  margin: 0 0 var(--space-md);
+  flex: 1 1 auto;
+}
+.calculators-fieldset legend {
+  font-size: 1.125rem;
+  color: var(--color-text);
+  margin-bottom: var(--space-sm);
+}
+.calculators-fieldset label {
+  display: block;
+  margin-bottom: var(--space-sm);
+  color: var(--color-secondary);
+}
+.calculators-fieldset input,
+.calculators-fieldset select {
+  width: 100%;
+  padding: var(--space-sm);
+  margin-top: var(--space-xs);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+}
+
+/* Remove number spinners */
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+
+/* Result block */
+.calculator-result {
+  margin-top: var(--space-md);
+  line-height: 1.4;
+}
+.calculator-result .result-label {
+  color: var(--color-primary);
+  font-weight: 600;
+  display: inline-block;
+  margin-right: var(--space-xs);
+}
+
+/* Actions row under each calculator (Reset / Copy) */
+.calc-actions {
+  margin-top: auto;
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-sm);
+}
+
+/* Small button variant */
+.btn-small {
+  padding: 0.25rem 0.6rem;
+  font-size: 0.75rem;
+  line-height: 1.1;
+}
+
+/* #3 – make secondary small buttons look like real buttons */
+.btn-secondary.btn-small {
+  background: var(--color-muted-bg);
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+}
+
+/* Toggle group (Pay calc) */
+.pay-mode {
+  display: flex;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-sm);
+}
+
+/* Old DL layout (keep if still used) */
+.pay-breakdown {
+  margin: var(--space-xs) 0 0;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  row-gap: 2px;
+  column-gap: var(--space-sm);
+  font-size: 0.9rem;
+}
+.pay-breakdown dt {
+  font-weight: 500;
+  color: var(--color-secondary);
+}
+.pay-breakdown dd {
+  margin: 0;
+  text-align: right;
+}
+
+/* New span-grid layout */
+.pay-result-grid {
+  margin-top: var(--space-xs);
+  display: grid;
+  grid-template-columns: auto 1fr;
+  row-gap: 2px;
+  column-gap: var(--space-sm);
+  font-size: 0.9rem;
+}
+.pay-result-grid span:nth-child(odd) {
+  color: var(--color-secondary);
+}
+.pay-result-grid span:nth-child(even) {
+  text-align: right;
+}

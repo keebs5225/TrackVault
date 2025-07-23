@@ -1,0 +1,105 @@
+/* frontend/src/styles/budgets.css */
+
+/* Page wrapper */
+.budgets-page {
+  max-width: 1000px;
+  margin: var(--space-lg) auto;
+  padding: 0 var(--space-sm) var(--space-lg);
+}
+.budgets-page h1 {
+  font-size: var(--font-heading);
+  color: var(--color-primary);
+  text-align: center;
+  margin-bottom: var(--space-lg);
+}
+
+/* Toggle button spacing */
+.budgets-page > .btn {
+  margin-bottom: var(--space-md);
+}
+
+/* Grid of budget sections */
+.budgets-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: var(--space-md);
+  margin-top: var(--space-md);
+}
+.budgets-grid > div {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs); 
+}
+
+/* Budget cards */
+.budget-card {
+  background: var(--color-muted-bg);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  padding: var(--space-md);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  transition: box-shadow .2s, transform .2s;
+}
+.budget-card:hover {
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+}
+.budget-card h2 {
+  margin: 0 0 var(--space-sm);
+  font-size: 1.125rem;
+  color: var(--color-text);
+}
+.budget-card p { margin: var(--space-xs) 0; }
+
+/* Summary block */
+.summary-block {
+  background: var(--color-muted-bg);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  padding: var(--space-md);
+  margin-top: var(--space-lg);
+}
+.summary-block h2 {
+  margin-top: 0;
+  color: var(--color-primary);
+}
+.summary-block p {
+  margin: var(--space-xs) 0;
+}
+
+/* EDIT MODE ONLY */
+.budget-card.is-editing .tv-actions--split {
+  display: flex !important;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+  margin-top: var(--space-md);
+}
+
+/* Flatten wrappers if present */
+.budget-card.is-editing .tv-actions--split > .left,
+.budget-card.is-editing .tv-actions--split > .right {
+  display: contents !important;
+}
+
+/* Generic buttons*/
+.budget-card.is-editing .tv-actions--split .btn {
+  flex: 1 1 140px;
+  width: 100%;
+  justify-content: center;
+}
+
+/* Reorder buttons */
+.budget-card.is-editing .tv-actions--split .btn-secondary { /* Discard */
+  order: 1;
+}
+.budget-card.is-editing .tv-actions--split .btn-primary {   /* Save */
+  order: 2;
+}
+
+.budget-card.is-editing .tv-actions--split .btn-danger {    /* Delete */
+  order: 99;
+  flex-basis: 100%;
+  margin-top: var(--space-lg);
+}

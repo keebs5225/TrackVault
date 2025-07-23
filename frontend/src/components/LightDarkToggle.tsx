@@ -1,5 +1,7 @@
 // frontend/src/components/LightDarkToggle.tsx
 import React, { useEffect, useState } from 'react';
+import '../styles/global.css'
+
 
 export default function LightDarkToggle() {
   const [dark, setDark] = useState<boolean>(false);

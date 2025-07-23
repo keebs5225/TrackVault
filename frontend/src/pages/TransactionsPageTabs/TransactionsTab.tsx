@@ -5,21 +5,33 @@ import Spinner from '../../components/Spinner'
 import { fetchAccounts } from '../../services/accounts'
 import { fetchTransactions, createTransaction, updateTransaction, deleteTransaction } from '../../services/transactions'
 import type { TransactionRead, TransactionCreate, TransactionUpdate, AccountRead, Paged } from '../../types'
+import "../../styles/global.css"
+import "../../styles/transactions.css"
 
-const pageSize = 1000  // load all, or you can keep pagination
+
+function capitalize(str: string) {
+  return str.charAt(0).toUpperCase() + str.slice(1)
+}
+
+const pageSize = 100
 
 export default function TransactionsTab(): JSX.Element {
   const qc = useQueryClient()
 
-  // Lookups
+  // ── Lookups ──────────────────────────────────────────
   const { data: accounts = [] } = useQuery<AccountRead[], Error>({
     queryKey: ['accounts'],
     queryFn: fetchAccounts,
   })
 
-  // Fetch all transactions
+  // ── Fetch transactions ───────────────────────────────
   const {
-    data: txs = { items: [], total: 0, page: 1, page_size: pageSize } as Paged<TransactionRead>,
+    data: txs = {
+      items: [],
+      total: 0,
+      page: 1,
+      page_size: pageSize,
+    } as Paged<TransactionRead>,
     isLoading,
     isError,
     error,
@@ -28,130 +40,373 @@ export default function TransactionsTab(): JSX.Element {
     queryFn: () => fetchTransactions({ page: 1, page_size: pageSize }),
   })
 
-  // Mutations
+  // ── Mutations ────────────────────────────────────────
   const createMut = useMutation<TransactionRead, Error, TransactionCreate>({
     mutationFn: createTransaction,
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['transactions'] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['transactions'] })
+      qc.invalidateQueries({ queryKey: ['accounts'] })
+    },
   })
   const updateMut = useMutation<TransactionRead, Error, { id: number; data: TransactionUpdate }>({
     mutationFn: ({ id, data }) => updateTransaction(id, data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['transactions'] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['transactions'] })
+      qc.invalidateQueries({ queryKey: ['accounts'] })
+    },
+    onError: (err) => {
+      // Handle error if necessary
+      console.error("Update failed:", err)
+    }
   })
+
   const deleteMut = useMutation<void, Error, number>({
     mutationFn: id => deleteTransaction(id).then(() => {}),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['transactions'] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['transactions'] })
+      qc.invalidateQueries({ queryKey: ['accounts'] })
+    },
   })
 
-  // Top form state
+  // ── UI state ─────────────────────────────────────────
+  const [showForm, setShowForm] = useState(false)
+
+  // Create form
+  const [title, setTitle] = useState('')
+  const [description, setDescription] = useState('')
   const [date, setDate] = useState('')
-  const [desc, setDesc] = useState('')
   const [acct, setAcct] = useState<number | ''>('')
   const [amount, setAmount] = useState('')
-  const [notes, setNotes] = useState('')
+  const [direction, setDirection] = useState<'deposit' | 'withdrawal'>('deposit')
 
-  // Per‐item edit state
+  // Inline edit
   const [editing, setEditing] = useState<Record<number, boolean>>({})
   const [editForm, setEditForm] = useState<Record<number, TransactionUpdate>>({})
 
+  const acctName = (id: number) =>
+    accounts.find(a => a.account_id === id)?.name ?? '—'
+
   function handleAdd(e: FormEvent) {
     e.preventDefault()
-    if (!date || !acct || !amount) return
+    if (!title || !date || !acct || !amount) return
     createMut.mutate({
+      title,
+      description,
       date,
-      description: desc,
       account_id: +acct,
       amount: parseFloat(amount),
-      notes: notes || undefined,
+      direction,
     })
-    setDate(''); setDesc(''); setAcct(''); setAmount(''); setNotes('')
+    setTitle('')
+    setDescription('')
+    setDate('')
+    setAcct('')
+    setAmount('')
+    setDirection('deposit')
+    setShowForm(false)
   }
 
   if (isLoading) return <Spinner />
-  if (isError) return <p style={{ color:'crimson' }}>{error?.message}</p>
+  if (isError) {
+    return (
+      <section className="transactions-page">
+        <h1>Transactions</h1>
+        <p className="error-message">{error?.message}</p>
+      </section>
+    )
+  }
+
+  // ── Summary numbers ──────────────────────────────────
+  const showing = txs.items.length
+  const total = txs.total
 
   return (
-    <>
-      <h3>Transactions</h3>
+    <section className="transactions-page">
+      <h1>Transactions</h1>
 
-      {/* Create Form */}
-      <form style={{ display:'flex', gap:8, flexWrap:'wrap', marginBottom:16 }} onSubmit={handleAdd}>
-        <input type="date" value={date} onChange={e=>setDate(e.target.value)} required />
-        <input placeholder="Description" value={desc} onChange={e=>setDesc(e.target.value)} />
-        <select value={acct} onChange={e=>setAcct(e.target.value?+e.target.value:'')} required>
-          <option value="">Account</option>
-          {accounts.map(a => <option key={a.account_id} value={a.account_id}>{a.name}</option>)}
-        </select>
-        <input type="number" placeholder="Amount" step="0.01" value={amount} onChange={e=>setAmount(e.target.value)} required/>
-        <input placeholder="Notes" value={notes} onChange={e=>setNotes(e.target.value)}/>
-        <button type="submit" disabled={createMut.status === 'pending'}>
-          {createMut.status === 'pending' ? '…' : 'Add'}
-        </button>
-      </form>
+      {/* Toggle Add Form */}
+      <button
+        className={`btn ${showForm ? 'btn-secondary' : 'btn-primary'}`}
+        onClick={() => setShowForm(s => !s)}
+      >
+        {showForm ? 'Close Form' : '+ New Transaction'}
+      </button>
+
+      {/* Summary */}
+      <p className="summary">Showing {showing} of {total}</p>
+
+      {/* Add form */}
+      {showForm && (
+        <form onSubmit={handleAdd} className="card tv-form-card tv-form">
+          <label className="tv-field">
+            <span className="tv-label">Title</span>
+            <input
+              className="tv-input"
+              placeholder="Title"
+              value={title}
+              onChange={e => setTitle(e.target.value)}
+              required
+            />
+          </label>
+
+          <label className="tv-field">
+            <span className="tv-label">Date of Transaction</span>
+            <input
+              className="tv-input"
+              type="date"
+              value={date}
+              onChange={e => setDate(e.target.value)}
+              required
+            />
+          </label>
+
+          <label className="tv-field">
+            <span className="tv-label">Description (optional)</span>
+            <input
+              className="tv-input"
+              placeholder="Description"
+              value={description}
+              onChange={e => setDescription(e.target.value)}
+            />
+          </label>
+
+          <label className="tv-field">
+            <span className="tv-label">Account</span>
+            <select
+              className="tv-select"
+              value={acct}
+              onChange={e => setAcct(e.target.value ? +e.target.value : '')}
+              required
+            >
+              <option value="">Select account</option>
+              {accounts.map(a => (
+                <option key={a.account_id} value={a.account_id}>
+                  {a.name}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <label className="tv-field">
+            <span className="tv-label">Amount ($)</span>
+            <input
+              className="tv-input"
+              type="number"
+              placeholder="0.00"
+              step="0.01"
+              value={amount}
+              onChange={e => setAmount(e.target.value)}
+              required
+            />
+          </label>
+
+          <label className="tv-field">
+            <span className="tv-label">Action (Deposit/Withdraw)</span>
+            <select
+              className="tv-select"
+              value={direction}
+              onChange={e => setDirection(e.target.value as 'deposit' | 'withdrawal')}
+            >
+              <option value="deposit">Deposit</option>
+              <option value="withdrawal">Withdrawal</option>
+            </select>
+          </label>
+
+          <div className="tv-actions">
+            <button
+              type="submit"
+              className="btn btn-primary"
+              disabled={createMut.status === 'pending'}
+            >
+              {createMut.status === 'pending' ? <Spinner /> : 'Add Transaction'}
+            </button>
+          </div>
+        </form>
+      )}
 
       {/* List */}
-      <div style={{ display:'grid', gap:16 }}>
+      <div className="transactions-grid">
         {txs.items.map(tx => {
           const isEdit = !!editing[tx.transaction_id]
-          const form = editForm[tx.transaction_id] ?? {
-            date: tx.date.split('T')[0],
+          const base: TransactionUpdate = {
+            title: tx.title,
             description: tx.description,
+            date: tx.date.split('T')[0],
             account_id: tx.account_id,
             amount: tx.amount,
-            notes: tx.notes,
+            direction: tx.direction as 'deposit' | 'withdrawal',
           }
+          const form = editForm[tx.transaction_id] ?? base
 
           return (
-            <div key={tx.transaction_id} style={{border:'1px solid #ccc',padding:16,borderRadius:4}}>
+            <div key={tx.transaction_id} className="transaction-card">
               {isEdit ? (
                 <>
-                  {/* Inline Edit */}
-                  <input type="date" value={form.date} onChange={e=>setEditForm(f=>(
-                    {...f, [tx.transaction_id]:{...form, date:e.target.value}}
-                  ))}/>
-                  <input placeholder="Desc" value={form.description||''}
-                    onChange={e=>setEditForm(f=>(
-                      {...f, [tx.transaction_id]:{...form, description:e.target.value}}
-                    ))}/>
-                  <select value={form.account_id} onChange={e=>setEditForm(f=>(
-                    {...f, [tx.transaction_id]:{...form, account_id:+e.target.value}}
-                  ))}>
-                    {accounts.map(a=><option key={a.account_id} value={a.account_id}>{a.name}</option>)}
-                  </select>
-                  <input type="number" step="0.01" value={form.amount}
-                    onChange={e=>setEditForm(f=>(
-                      {...f, [tx.transaction_id]:{...form, amount:parseFloat(e.target.value)}}
-                    ))}/>
-                  <input placeholder="Notes" value={form.notes||''}
-                    onChange={e=>setEditForm(f=>(
-                      {...f, [tx.transaction_id]:{...form, notes:e.target.value}}
-                    ))}/>
-                  <div style={{display:'flex',gap:8,marginTop:8}}>
-                    <button onClick={()=>updateMut.mutate({ id: tx.transaction_id, data: form })}
-                      disabled={updateMut.status === 'pending'}
+                  <label className="tv-field">
+                    <span className="tv-label">Title</span>
+                    <input
+                      className="tv-input"
+                      value={form.title}
+                      onChange={e =>
+                        setEditForm(f => ({
+                          ...f,
+                          [tx.transaction_id]: { ...form, title: e.target.value },
+                        }))
+                      }
+                    />
+                  </label>
+
+                  <label className="tv-field">
+                    <span className="tv-label">Date of Transaction</span>
+                    <input
+                      className="tv-input"
+                      type="date"
+                      value={form.date as string}
+                      onChange={e =>
+                        setEditForm(f => ({
+                          ...f,
+                          [tx.transaction_id]: { ...form, date: e.target.value },
+                        }))
+                      }
+                    />
+                  </label>
+
+                  <label className="tv-field">
+                    <span className="tv-label">Description (optional)</span>
+                    <input
+                      className="tv-input"
+                      value={form.description}
+                      onChange={e =>
+                        setEditForm(f => ({
+                          ...f,
+                          [tx.transaction_id]: { ...form, description: e.target.value },
+                        }))
+                      }
+                    />
+                  </label>
+
+                  <label className="tv-field">
+                    <span className="tv-label">Account</span>
+                    <select
+                      className="tv-select"
+                      value={form.account_id}
+                      onChange={e =>
+                        setEditForm(f => ({
+                          ...f,
+                          [tx.transaction_id]: { ...form, account_id: +e.target.value },
+                        }))
+                      }
                     >
-                      {updateMut.status === 'pending' ? '…' : 'Save'}
-                    </button>
-                    <button onClick={()=>setEditing(e=>({...e,[tx.transaction_id]:false}))}>
-                      Cancel
-                    </button>
+                      {accounts.map(a => (
+                        <option key={a.account_id} value={a.account_id}>
+                          {a.name}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+
+                  <label className="tv-field">
+                    <span className="tv-label">Amount ($)</span>
+                    <input
+                      className="tv-input"
+                      type="number"
+                      step="0.01"
+                      value={form.amount}
+                      onChange={e =>
+                        setEditForm(f => ({
+                          ...f,
+                          [tx.transaction_id]: {
+                            ...form,
+                            amount: parseFloat(e.target.value),
+                          },
+                        }))
+                      }
+                    />
+                  </label>
+
+                  <label className="tv-field">
+                    <span className="tv-label">Action (Deposit/Withdraw)</span>
+                    <select
+                      className="tv-select"
+                      value={form.direction}
+                      onChange={e =>
+                        setEditForm(f => ({
+                          ...f,
+                          [tx.transaction_id]: {
+                            ...form,
+                            direction: e.target.value as 'deposit' | 'withdrawal',
+                          },
+                        }))
+                      }
+                    >
+                      <option value="deposit">Deposit</option>
+                      <option value="withdrawal">Withdrawal</option>
+                    </select>
+                  </label>
+
+                  {/* NEW footer with delete on the left */}
+                  <div className="tv-actions--split">
+                    <div className="left">
+                      <button
+                        className="btn btn-danger"
+                        onClick={() => deleteMut.mutate(tx.transaction_id)}
+                        disabled={deleteMut.status === 'pending'}
+                      >
+                        {deleteMut.status === 'pending' ? '…' : 'Delete'}
+                      </button>
+                    </div>
+
+                    <div className="right">
+                      <button
+                        className="btn btn-primary"
+                        onClick={() => {
+                          updateMut.mutate({ id: tx.transaction_id, data: form })
+                          setEditing(e => ({ ...e, [tx.transaction_id]: false }))
+                        }}
+                        disabled={updateMut.status === 'pending'}
+                      >
+                        {updateMut.status === 'pending' ? '…' : 'Save'}
+                      </button>
+                      <button
+                        className="btn btn-secondary"
+                        onClick={() =>
+                          setEditing(e => ({ ...e, [tx.transaction_id]: false }))
+                        }
+                      >
+                        Discard
+                      </button>
+                    </div>
                   </div>
                 </>
               ) : (
                 <>
-                  {/* Read Only */}
-                  <p><strong>{new Date(tx.date).toLocaleDateString()}</strong></p>
-                  <p>{tx.description}</p>
-                  <p>{accounts.find(a=>a.account_id===tx.account_id)?.name}</p>
-                  <p>${tx.amount.toFixed(2)}</p>
-                  <p>{tx.notes||'—'}</p>
-                  <div style={{display:'flex',gap:8,marginTop:8}}>
-                    <button onClick={()=>{
-                      setEditForm(f=>({...f,[tx.transaction_id]:form}))
-                      setEditing(e=>({...e,[tx.transaction_id]:true}))
-                    }}>Edit</button>
-                    <button onClick={()=>deleteMut.mutate(tx.transaction_id)} disabled={deleteMut.status === 'pending'}>
-                      {deleteMut.status === 'pending' ? '…' : '❌'}
+                  <p>
+                    <b>{capitalize(tx.title)}</b> — {new Date(tx.date).toLocaleDateString()} —{' '}
+                    <em>{tx.direction.toUpperCase()}</em>
+                  </p>
+                  {tx.description && (
+                    <p>
+                      <strong>Description:</strong> {tx.description}
+                    </p>
+                  )}
+                  <p>
+                    <strong>Account:</strong> {acctName(tx.account_id)}
+                  </p>
+                  <p>
+                    <strong>Amount:</strong> ${tx.amount.toFixed(2)}
+                  </p>
+
+                  <div className="tv-actions">
+                    <button
+                      className="btn btn-primary"
+                      onClick={() => {
+                        setEditForm(f => ({ ...f, [tx.transaction_id]: base }))
+                        setEditing(e => ({ ...e, [tx.transaction_id]: true }))
+                      }}
+                    >
+                      Edit
                     </button>
+                    {/* Delete removed from view mode intentionally */}
                   </div>
                 </>
               )}
@@ -159,6 +414,6 @@ export default function TransactionsTab(): JSX.Element {
           )
         })}
       </div>
-    </>
+    </section>
   )
 }

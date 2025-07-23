@@ -1,0 +1,86 @@
+/* frontend/src/styles/profile.css */
+
+/* Wrapper */
+.profile-page {
+  max-width: 600px;
+  margin: var(--space-lg) auto;
+  background: var(--color-muted-bg);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+  padding: var(--space-lg);
+}
+.profile-page h1 {
+  font-size: var(--font-heading);
+  color: var(--color-primary);
+  text-align: center;
+  margin-bottom: var(--space-lg);
+}
+
+/* Details grid (read view) */
+.profile-details {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  row-gap: var(--space-md);
+  column-gap: var(--space-lg);
+  margin-bottom: var(--space-lg);
+}
+.profile-details label {
+  font-weight: 500;
+  color: var(--color-secondary);
+}
+.profile-details span {
+  color: var(--color-text);
+}
+
+/* Edit form */
+.profile-form {
+  background: none; 
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+.profile-error {
+  color: var(--color-danger);
+  margin-bottom: var(--space-sm);
+}
+
+/* Password eye toggle */
+.password-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.password-wrapper input {
+  flex: 1;
+  padding-right: 2.5rem; 
+}
+.toggle-eye {
+  position: absolute;
+  right: .5rem;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  color: var(--color-secondary);
+  display: flex;
+  align-items: center;
+}
+
+/* Action buttons row */
+.profile-actions {
+  display: flex;
+  justify-content: center;
+  gap: var(--space-md);
+}
+
+/* Dark mode tweaks overides global dark styles */
+body.dark .profile-page {
+  background: #1e1e1e;
+  color: #e0e0e0;
+  box-shadow: none;
+}
+body.dark .profile-form { background: none; }
+
+

@@ -1,4 +1,4 @@
-# backend/app/models.py
+#backend/app/models.py
 from datetime import datetime
 from typing import Optional, List
 from sqlmodel import SQLModel, Field, Relationship
@@ -19,12 +19,16 @@ class Frequency(str, enum.Enum):
     monthly = "monthly"
     yearly  = "yearly"
 
-# this enum mirrors your Postgres `account_type` enum
 class AccountType(str, enum.Enum):
     checking = "checking"
     savings  = "savings"
     credit   = "credit"
     cash     = "cash"
+
+class TransactionDirection(str, enum.Enum):
+    deposit    = "deposit"
+    withdrawal = "withdrawal"
+
 
 #–––– User ––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––
 
@@ -36,7 +40,6 @@ class User(SQLModel, table=True):
     created_at:    datetime   = Field(default_factory=datetime.utcnow)
     updated_at:    datetime   = Field(default_factory=datetime.utcnow)
 
-    # backrefs
     accounts:      List["Account"]             = Relationship(back_populates="owner")
     transactions:  List["Transaction"]         = Relationship(back_populates="user")
     budgets:       List["Budget"]              = Relationship(back_populates="owner")
@@ -73,19 +76,29 @@ class Account(SQLModel, table=True):
 #–––– Transaction ––––––––––––––––––––––––––––––––––––––––––––––––––––––
 
 class Transaction(SQLModel, table=True):
-    transaction_id: int        = Field(default=None, primary_key=True)
-    user_id:        int        = Field(foreign_key="user.user_id", index=True)
-    amount:         float
-    date:           datetime   = Field(default_factory=datetime.utcnow)
-    description:    str
-    account_id:     int        = Field(foreign_key="account.account_id", index=True)
-    type:           str        = Field(sa_column_kwargs={"server_default":"expense"})
-    notes:          Optional[str] = None
-    created_at:     datetime   = Field(default_factory=datetime.utcnow)
-    updated_at:     datetime   = Field(default_factory=datetime.utcnow)
+    __tablename__ = "transaction"
 
-    user:       "User"       = Relationship(back_populates="transactions")
-    account:    Account      = Relationship(back_populates="transactions")
+    transaction_id: int                  = Field(default=None, primary_key=True)
+    user_id:        int                  = Field(foreign_key="user.user_id", index=True)
+    title:          str                  = Field(..., description="Short title for this transaction")
+    description:    str                  = Field(..., description="Detailed description")
+    amount:         float                = Field(..., description="Positive amount")
+    date:           datetime             = Field(default_factory=datetime.utcnow)
+    account_id:     int                  = Field(foreign_key="account.account_id", index=True)
+    # Python field name "type" maps to DB column "direction"
+    direction:           TransactionDirection = Field(
+        sa_column=Column(
+            "direction",
+            PGEnum(TransactionDirection, name="transaction_direction", create_type=False),
+            nullable=False,
+            server_default="withdrawal"
+        )
+    )
+    created_at:     datetime             = Field(default_factory=datetime.utcnow)
+    updated_at:     datetime             = Field(default_factory=datetime.utcnow)
+
+    user:    "User"    = Relationship(back_populates="transactions")
+    account: Account    = Relationship(back_populates="transactions")
 
 
 #–––– Budget ––––––––––––––––––––––––––––––––––––––––––––––––––––––––––
@@ -118,16 +131,26 @@ class RecurringTransaction(SQLModel, table=True):
     recurring_id:  int        = Field(default=None, primary_key=True)
     user_id:       int        = Field(foreign_key="user.user_id", index=True)
     account_id:    int        = Field(foreign_key="account.account_id")
+    title:         Optional[str] = None
+    description:   Optional[str] = None
+    direction:     TransactionDirection = Field(
+        sa_column=Column(
+            PGEnum(TransactionDirection, name="transaction_direction", create_type=False),
+            nullable=False,
+            server_default="withdrawal"
+        )
+    )
+
     amount:        float
-    frequency:     Frequency  = Field(sa_column=Column(PGEnum(Frequency), nullable=False))
+    frequency:     Frequency  = Field(sa_column=Column(PGEnum(Frequency, name="frequency", create_type=False), nullable=False))
     start_date:    datetime
     end_date:      Optional[datetime] = None
     next_run_date: datetime
     created_at:    datetime   = Field(default_factory=datetime.utcnow)
     updated_at:    datetime   = Field(default_factory=datetime.utcnow)
 
-    owner:    "User"              = Relationship(back_populates="recurrings")
-    account:  Account             = Relationship(back_populates="recurrings")
+    owner:   "User"   = Relationship(back_populates="recurrings")
+    account: Account  = Relationship(back_populates="recurrings")
 
 
 #–––– Goals & Deposits ––––––––––––––––––––––––––––––––––––––––––––––––

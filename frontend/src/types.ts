@@ -112,10 +112,7 @@ export interface RecurringUpdate {
 export interface BudgetRead {
   budget_id: number
   user_id: number
-
-  /** only these three sections now */
   section: 'income' | 'fixed' | 'variable'
-
   label: string
   amount: number
   created_at: string
@@ -135,11 +132,14 @@ export interface BudgetUpdate {
 }
 
 // ─── Goals ──────────────────────────────────────────
+export type Priority = 'low' | 'med' | 'high'
+
 export interface GoalBase {
   title: string
   description?: string
   target_amount: number
   target_date: string  // YYYY-MM-DD
+  priority: Priority
 }
 
 export interface GoalRead extends GoalBase {

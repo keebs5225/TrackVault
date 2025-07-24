@@ -1,5 +1,5 @@
 // frontend/src/pages/BudgetsPageTabs/BudgetsTab.tsx
-import React, { useState, FormEvent } from 'react'
+import React, { useState, FormEvent, useMemo } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import Spinner from '../../components/Spinner'
 import { fetchBudgets, createBudget, updateBudget, deleteBudget } from '../../services/budgets'
@@ -9,18 +9,29 @@ import '../../styles/budgets.css'
 
 type SectionKey = 'income' | 'fixed' | 'variable'
 
-function capitalize(str: string) {
-  return str.charAt(0).toUpperCase() + str.slice(1)
-}
+/* utils */
+const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1)
+
+/* sort keys */
+type SortKey =
+  | 'amount_desc'
+  | 'amount_asc'
+  | 'label_az'
+  | 'label_za'
+  | 'income_first'
+  | 'fixed_first'
+  | 'variable_first'
 
 export default function BudgetsTab(): JSX.Element {
   const qc = useQueryClient()
 
+  /* ── Fetch ─────────────────────────────────────────── */
   const { data: budgets = [], isLoading, isError, error } = useQuery<BudgetRead[], Error>({
     queryKey: ['budgets'],
     queryFn: fetchBudgets,
   })
 
+  /* ── Mutations ─────────────────────────────────────── */
   const createMut = useMutation<BudgetRead, Error, BudgetCreate>({
     mutationFn: createBudget,
     onSuccess: () => qc.invalidateQueries({ queryKey: ['budgets'] }),
@@ -34,6 +45,7 @@ export default function BudgetsTab(): JSX.Element {
     onSuccess: () => qc.invalidateQueries({ queryKey: ['budgets'] }),
   })
 
+  /* ── UI state ───────────────────────────────────────── */
   const [showForm, setShowForm] = useState(false)
   const [newSection, setNewSection] = useState<SectionKey>('income')
   const [newLabel, setNewLabel] = useState('')
@@ -44,20 +56,55 @@ export default function BudgetsTab(): JSX.Element {
     Record<number, { section: SectionKey; label: string; amount: number }>
   >({})
 
+  const [sortBy, setSortBy] = useState<SortKey>('amount_desc')
+
+  /* ── All hooks (useMemo) BEFORE any early returns ───── */
+  const sectionOrder: SectionKey[] = useMemo(() => {
+    switch (sortBy) {
+      case 'income_first':   return ['income', 'fixed', 'variable']
+      case 'fixed_first':    return ['fixed', 'income', 'variable']
+      case 'variable_first': return ['variable', 'income', 'fixed']
+      default:               return ['income', 'fixed', 'variable']
+    }
+  }, [sortBy])
+
+  const itemSorter = useMemo(() => {
+    switch (sortBy) {
+      case 'amount_desc': return (a: BudgetRead, b: BudgetRead) => b.amount - a.amount
+      case 'amount_asc':  return (a: BudgetRead, b: BudgetRead) => a.amount - b.amount
+      case 'label_az':    return (a: BudgetRead, b: BudgetRead) => a.label.localeCompare(b.label)
+      case 'label_za':    return (a: BudgetRead, b: BudgetRead) => b.label.localeCompare(a.label)
+      default:            return () => 0
+    }
+  }, [sortBy])
+
+  const groupedSorted = useMemo(() => {
+    const map: Record<SectionKey, BudgetRead[]> = { income: [], fixed: [], variable: [] }
+    budgets.forEach(b => map[b.section as SectionKey].push(b))
+    ;(Object.keys(map) as SectionKey[]).forEach(sec => map[sec].sort(itemSorter))
+    return map
+  }, [budgets, itemSorter])
+
+  const totals = useMemo(() => {
+    const totalBy = (sec: SectionKey) =>
+      budgets.filter(b => b.section === sec).reduce((sum, b) => sum + b.amount, 0)
+    const income = totalBy('income')
+    const expenses = totalBy('fixed') + totalBy('variable')
+    return { income, expenses, leftover: income - expenses }
+  }, [budgets])
+
+  /* ── Early returns (no hooks after this point) ──────── */
   if (isLoading) return <Spinner />
   if (isError)   return <p className="error-message">{error.message}</p>
 
-  const totalBy = (sec: SectionKey) =>
-    budgets.filter(b => b.section === sec).reduce((sum, b) => sum + b.amount, 0)
-  const totalIncome   = totalBy('income')
-  const totalExpenses = totalBy('fixed') + totalBy('variable')
-  const leftover      = totalIncome - totalExpenses
-
+  /* ── Handlers ───────────────────────────────────────── */
   function handleAdd(e: FormEvent) {
     e.preventDefault()
     if (!newLabel || !newAmount) return
     createMut.mutate({ section: newSection, label: newLabel, amount: +newAmount })
-    setNewLabel(''); setNewAmount(''); setShowForm(false)
+    setNewLabel('')
+    setNewAmount('')
+    setShowForm(false)
   }
 
   function renderCard(item: BudgetRead) {
@@ -66,10 +113,7 @@ export default function BudgetsTab(): JSX.Element {
     const form = editForm[item.budget_id] ?? base
 
     return (
-      <div
-        key={item.budget_id}
-        className={`budget-card ${isEdit ? 'is-editing' : ''}`}
-      >
+      <div key={item.budget_id} className={`budget-card ${isEdit ? 'is-editing' : ''}`}>
         {isEdit ? (
           <>
             <label className="tv-field">
@@ -105,7 +149,7 @@ export default function BudgetsTab(): JSX.Element {
             </label>
 
             <label className="tv-field">
-              <span className="tv-label">Amount</span>
+              <span className="tv-label">Amount ($)</span>
               <input
                 className="tv-input"
                 type="number"
@@ -179,12 +223,37 @@ export default function BudgetsTab(): JSX.Element {
     <section className="budgets-page">
       <h1>Budgets</h1>
 
-      <button
-        className={`btn ${showForm ? 'btn-secondary' : 'btn-primary'}`}
-        onClick={() => setShowForm(f => !f)}
-      >
-        {showForm ? 'Close Form' : '+ Add Budget'}
-      </button>
+      <div className="header-row">
+        <button
+          className={`btn ${showForm ? 'btn-secondary' : 'btn-primary'}`}
+          onClick={() => setShowForm(f => !f)}
+        >
+          {showForm ? 'Close Form' : '+ Add Budget'}
+        </button>
+
+        {/* Sort dropdown */}
+        <select
+          className="tv-select sort-select"
+          value={sortBy}
+          onChange={e => setSortBy(e.target.value as SortKey)}
+        >
+          <optgroup label="Section">
+            <option value="income_first">Income</option>
+            <option value="fixed_first">Fixed</option>
+            <option value="variable_first">Variable</option>
+          </optgroup>
+
+          <optgroup label="Title">
+            <option value="label_az">Title (A→Z)</option>
+            <option value="label_za">Title (Z→A)</option>
+          </optgroup>
+
+          <optgroup label="Amount">
+            <option value="amount_desc">Amount (Highest)</option>
+            <option value="amount_asc">Amount (Lowest)</option>
+          </optgroup>
+        </select>
+      </div>
 
       {showForm && (
         <form onSubmit={handleAdd} className="card tv-form-card tv-form">
@@ -218,7 +287,7 @@ export default function BudgetsTab(): JSX.Element {
               className="tv-input"
               type="number"
               placeholder="$0.00"
-              step="0.01"
+              step="1"
               value={newAmount}
               onChange={e => setNewAmount(e.target.value)}
               required
@@ -237,26 +306,28 @@ export default function BudgetsTab(): JSX.Element {
         </form>
       )}
 
+      {/* Sections in chosen order */}
       <div className="budgets-grid">
-        <div>
-          <h2>Income <small>(NET)</small></h2>
-          {budgets.filter(b => b.section === 'income').map(renderCard)}
-        </div>
-        <div>
-          <h2>Fixed Expenses</h2>
-          {budgets.filter(b => b.section === 'fixed').map(renderCard)}
-        </div>
-        <div>
-          <h2>Variable Expenses</h2>
-          {budgets.filter(b => b.section === 'variable').map(renderCard)}
-        </div>
+        {sectionOrder.map(sec => (
+          <div key={sec}>
+            <h2>
+              {sec === 'income'
+                ? <>Income <small>(NET)</small></>
+                : sec === 'fixed'
+                ? 'Fixed Expenses'
+                : 'Variable Expenses'}
+            </h2>
+            {groupedSorted[sec].map(renderCard)}
+          </div>
+        ))}
       </div>
 
       <div className="summary-block">
         <h2>Summary</h2>
-        <p><strong>Total Income:</strong> ${totalIncome.toFixed(2)}</p>
-        <p><strong>Total Expenses:</strong> ${totalExpenses.toFixed(2)}</p>
-        <p><strong>Leftover:</strong> ${leftover.toFixed(2)}</p>
+        <p><strong>Total Income:</strong> ${totals.income.toFixed(2)}</p>
+        <p><strong>Total Expenses:</strong> ${totals.expenses.toFixed(2)}</p>
+        <p>{'-------------------------------------------'}</p>
+        <p><strong>Leftover:</strong> ${totals.leftover.toFixed(2)}</p>
       </div>
     </section>
   )

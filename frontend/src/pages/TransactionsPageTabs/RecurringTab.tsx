@@ -1,49 +1,59 @@
 // frontend/src/pages/TransactionsPageTabs/RecurringTab.tsx
-
 import React, { useState, FormEvent, useMemo } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import Spinner from '../../components/Spinner'
 import { fetchAccounts } from '../../services/accounts'
-import { fetchRecurring, createRecurring, updateRecurring, deleteRecurring } from '../../services/recurring'
-import type { AccountRead, RecurringRead, RecurringCreate, RecurringUpdate } from '../../types'
+import {
+  fetchRecurring,
+  createRecurring,
+  updateRecurring,
+  deleteRecurring,
+} from '../../services/recurring'
+import type {
+  AccountRead,
+  RecurringRead,
+  RecurringCreate,
+  RecurringUpdate,
+} from '../../types'
 import '../../styles/global.css'
 import '../../styles/recurring.css'
 
 type Dir = 'deposit' | 'withdrawal'
 type Freq = 'daily' | 'weekly' | 'monthly' | 'yearly'
 
-function capitalize(str: string) {
-  return str.charAt(0).toUpperCase() + str.slice(1)
-}
-
-/* -------- helpers -------- */
+/* ------------ helpers ------------- */
+const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1)
 const acctName = (acs: AccountRead[], id: number) =>
   acs.find(a => a.account_id === id)?.name ?? '—'
-
 const actionWord = (dir: Dir) => (dir === 'deposit' ? 'Deposit' : 'Withdrawal')
 
 const addFreq = (isoDate: string, freq: Freq): string => {
   const d = new Date(isoDate)
   if (Number.isNaN(d.getTime())) return isoDate
-
   switch (freq) {
-    case 'daily':
-      d.setDate(d.getDate() + 1)
-      break
-    case 'weekly':
-      d.setDate(d.getDate() + 7)
-      break
-    case 'monthly': {
-      const m = d.getMonth()
-      d.setMonth(m + 1)
-      break
-    }
-    case 'yearly':
-      d.setFullYear(d.getFullYear() + 1)
-      break
+    case 'daily':   d.setDate(d.getDate() + 1); break
+    case 'weekly':  d.setDate(d.getDate() + 7); break
+    case 'monthly': d.setMonth(d.getMonth() + 1); break
+    case 'yearly':  d.setFullYear(d.getFullYear() + 1); break
   }
   return d.toISOString().split('T')[0]
 }
+
+/* ------------ sorting ------------- */
+type BaseSortKey =
+  | 'start_desc'
+  | 'start_asc'
+  | 'next_desc'
+  | 'next_asc'
+  | 'amount_desc'
+  | 'amount_asc'
+  | 'title_az'
+  | 'title_za'
+  | 'account_az'
+  | 'deposit_first'
+  | 'withdraw_first'
+
+type SortKey = BaseSortKey | `acc_${number}` | `freq_${Freq}`
 
 export default function RecurringTab(): JSX.Element {
   const qc = useQueryClient()
@@ -95,7 +105,6 @@ export default function RecurringTab(): JSX.Element {
   /* UI state */
   const [showForm, setShowForm] = useState(false)
 
-  // today's date once
   const todayISO = useMemo(() => new Date().toISOString().split('T')[0], [])
 
   // create form
@@ -105,14 +114,10 @@ export default function RecurringTab(): JSX.Element {
   const [amount, setAmount] = useState('')
   const [direction, setDirection] = useState<Dir>('deposit')
   const [frequency, setFrequency] = useState<Freq>('monthly')
-  const [startDate, setStartDate] = useState(todayISO)   // <-- default to today
+  const [startDate, setStartDate] = useState(todayISO)
   const [endDate, setEndDate] = useState('')
 
-  // computed nextRun (no manual field now)
-  const nextRun = useMemo(() => {
-    if (!startDate) return ''
-    return addFreq(startDate, frequency)
-  }, [startDate, frequency])
+  const nextRun = useMemo(() => (startDate ? addFreq(startDate, frequency) : ''), [startDate, frequency])
 
   // edit state
   const [editing, setEditing] = useState<Record<number, boolean>>({})
@@ -130,6 +135,56 @@ export default function RecurringTab(): JSX.Element {
     >
   >({})
 
+  // sort state
+  const [sortBy, setSortBy] = useState<SortKey>('start_desc')
+
+  const time = (d: string | Date) => new Date(d).getTime()
+  const defaultTie = (a: RecurringRead, b: RecurringRead) =>
+    time(b.start_date) - time(a.start_date)
+
+  const SORTS: Record<SortKey, (a: RecurringRead, b: RecurringRead) => number> = useMemo(() => {
+    const base: Record<BaseSortKey, (a: RecurringRead, b: RecurringRead) => number> = {
+      start_desc:   (a, b) => time(b.start_date) - time(a.start_date),
+      start_asc:    (a, b) => time(a.start_date) - time(b.start_date),
+      next_desc:    (a, b) => time(b.next_run_date) - time(a.next_run_date),
+      next_asc:     (a, b) => time(a.next_run_date) - time(b.next_run_date),
+      amount_desc:  (a, b) => b.amount - a.amount,
+      amount_asc:   (a, b) => a.amount - b.amount,
+      title_az:     (a, b) => ((a as any).title ?? '').localeCompare((b as any).title ?? ''),
+      title_za:     (a, b) => ((b as any).title ?? '').localeCompare((a as any).title ?? ''),
+      account_az:   (a, b) => acctName(accounts, a.account_id).localeCompare(acctName(accounts, b.account_id)),
+      deposit_first:  (a, b) => (a.direction === 'withdrawal' ? 1 : 0) - (b.direction === 'withdrawal' ? 1 : 0),
+      withdraw_first: (a, b) => (a.direction === 'deposit' ? 1 : 0) - (b.direction === 'deposit' ? 1 : 0),
+    }
+
+    const accSorts = Object.fromEntries(
+      accounts.map(acc => {
+        const key: SortKey = `acc_${acc.account_id}`
+        return [
+          key,
+          (a: RecurringRead, b: RecurringRead) => {
+            const aIs = a.account_id === acc.account_id
+            const bIs = b.account_id === acc.account_id
+            if (aIs && !bIs) return -1
+            if (!aIs && bIs) return 1
+            return defaultTie(a, b)
+          },
+        ]
+      })
+    )
+
+    const freqSorts: Record<`freq_${Freq}`, (a: RecurringRead, b: RecurringRead) => number> = {
+      freq_daily:   (a, b) => (a.frequency === 'daily'   ? -1 : b.frequency === 'daily'   ? 1 : defaultTie(a, b)),
+      freq_weekly:  (a, b) => (a.frequency === 'weekly'  ? -1 : b.frequency === 'weekly'  ? 1 : defaultTie(a, b)),
+      freq_monthly: (a, b) => (a.frequency === 'monthly' ? -1 : b.frequency === 'monthly' ? 1 : defaultTie(a, b)),
+      freq_yearly:  (a, b) => (a.frequency === 'yearly'  ? -1 : b.frequency === 'yearly'  ? 1 : defaultTie(a, b)),
+    }
+
+    return { ...base, ...accSorts, ...freqSorts }
+  }, [accounts])
+
+  const sortedRecs = useMemo(() => [...recs].sort(SORTS[sortBy]), [recs, SORTS, sortBy])
+
   function handleAdd(e: FormEvent) {
     e.preventDefault()
     if (!title || !acct || !amount || !startDate) return
@@ -142,18 +197,17 @@ export default function RecurringTab(): JSX.Element {
       direction,
       frequency,
       start_date: startDate,
-      next_run_date: nextRun, // auto
+      next_run_date: nextRun,
       end_date: endDate || undefined,
     })
 
-    // reset
     setTitle('')
     setDescription('')
     setAcct('')
     setAmount('')
     setDirection('deposit')
     setFrequency('monthly')
-    setStartDate(todayISO)  // <-- reset to today again
+    setStartDate(todayISO)
     setEndDate('')
     setShowForm(false)
   }
@@ -169,12 +223,61 @@ export default function RecurringTab(): JSX.Element {
     <section className="recurring-page">
       <h1>Recurring Transactions</h1>
 
-      <button
-        className={`btn ${showForm ? 'btn-secondary' : 'btn-primary'}`}
-        onClick={() => setShowForm(f => !f)}
-      >
-        {showForm ? 'Close Form' : '+ New Recurring'}
-      </button>
+      <div className="header-row">
+        <button
+          className={`btn ${showForm ? 'btn-secondary' : 'btn-primary'}`}
+          onClick={() => setShowForm(f => !f)}
+        >
+          {showForm ? 'Close Form' : '+ New Recurring'}
+        </button>
+
+        {/* Sort dropdown with groups */}
+        <select
+          className="tv-select sort-select"
+          value={sortBy}
+          onChange={e => setSortBy(e.target.value as SortKey)}
+        >
+          <optgroup label="Title">
+            <option value="title_az">Title (A→Z)</option>
+            <option value="title_za">Title (Z→A)</option>
+          </optgroup>
+
+          <optgroup label="Start Date">
+            <option value="start_desc">Date (Newest)</option>
+            <option value="start_asc">Date (Oldest)</option>
+          </optgroup>
+
+          <optgroup label="Next Transaction">
+            <option value="next_asc">Next (Earliest)</option>
+            <option value="next_desc">Next (Latest)</option>
+          </optgroup>
+
+          <optgroup label="Accounts">
+            {accounts.map(a => (
+              <option key={a.account_id} value={`acc_${a.account_id}`}>
+                {a.name}
+              </option>
+            ))}
+          </optgroup>
+
+          <optgroup label="Amount">
+            <option value="amount_desc">Amount (Highest)</option>
+            <option value="amount_asc">Amount (Lowest)</option>
+          </optgroup>
+
+          <optgroup label="Action">
+            <option value="deposit_first">Deposits</option>
+            <option value="withdraw_first">Withdrawals</option>
+          </optgroup>
+
+          <optgroup label="Frequency">
+            <option value="freq_daily">Daily</option>
+            <option value="freq_weekly">Weekly</option>
+            <option value="freq_monthly">Monthly</option>
+            <option value="freq_yearly">Yearly</option>
+          </optgroup>
+        </select>
+      </div>
 
       <p className="summary">Showing {showing} of {total}</p>
 
@@ -192,12 +295,23 @@ export default function RecurringTab(): JSX.Element {
           </label>
 
           <label className="tv-field">
-            <span className="tv-label">Description (optional)</span>
+            <span className="tv-label">Description (Optional)</span>
             <input
               className="tv-input"
               placeholder="Description"
               value={description}
               onChange={e => setDescription(e.target.value)}
+            />
+          </label>
+
+          <label className="tv-field">
+            <span className="tv-label">Start Date</span>
+            <input
+              className="tv-input"
+              type="date"
+              value={startDate}
+              onChange={e => setStartDate(e.target.value)}
+              required
             />
           </label>
 
@@ -219,12 +333,12 @@ export default function RecurringTab(): JSX.Element {
           </label>
 
           <label className="tv-field">
-            <span className="tv-label">Amount ($)</span>
+            <span className="tv-label">Amount</span>
             <input
               className="tv-input"
               type="number"
-              step="0.01"
-              placeholder="0.00"
+              step="1"
+              placeholder="$0.00"
               value={amount}
               onChange={e => setAmount(e.target.value)}
               required
@@ -236,9 +350,7 @@ export default function RecurringTab(): JSX.Element {
             <select
               className="tv-select"
               value={direction}
-              onChange={e =>
-                setDirection(e.target.value as 'deposit' | 'withdrawal')
-              }
+              onChange={e => setDirection(e.target.value as Dir)}
             >
               <option value="deposit">Deposit</option>
               <option value="withdrawal">Withdrawal</option>
@@ -260,18 +372,6 @@ export default function RecurringTab(): JSX.Element {
           </label>
 
           <label className="tv-field">
-            <span className="tv-label">Start Date</span>
-            <input
-              className="tv-input"
-              type="date"
-              value={startDate}
-              onChange={e => setStartDate(e.target.value)}
-              required
-            />
-          </label>
-
-          {/* Read-only computed next date */}
-          <label className="tv-field">
             <span className="tv-label">Next Transaction (Auto)</span>
             <input className="tv-input" type="date" value={nextRun} readOnly />
           </label>
@@ -290,7 +390,7 @@ export default function RecurringTab(): JSX.Element {
 
       {/* List */}
       <div className="transactions-grid">
-        {recs.map(r => {
+        {sortedRecs.map(r => {
           const isEdit = !!editing[r.recurring_id]
 
           const base: RecurringUpdate & {
@@ -307,14 +407,12 @@ export default function RecurringTab(): JSX.Element {
             amount: r.amount,
             direction: r.direction,
             frequency: r.frequency,
-            start_date: r.start_date,
-            next_run_date: r.next_run_date,
+            start_date: r.start_date.split('T')[0],
+            next_run_date: r.next_run_date.split('T')[0],
             end_date: r.end_date || undefined,
           }
 
           const form = editForm[r.recurring_id] ?? base
-
-          // compute next txn for display (trust DB value, fallback to calc)
           const displayNext =
             r.next_run_date ||
             addFreq(r.start_date.split('T')[0], r.frequency)
@@ -338,107 +436,17 @@ export default function RecurringTab(): JSX.Element {
                   </label>
 
                   <label className="tv-field">
-                    <span className="tv-label">Description (optional)</span>
+                    <span className="tv-label">Description</span>
                     <input
                       className="tv-input"
                       value={form.description || ''}
                       onChange={e =>
                         setEditForm(f => ({
                           ...f,
-                          [r.recurring_id]: {
-                            ...form,
-                            description: e.target.value,
-                          },
+                          [r.recurring_id]: { ...form, description: e.target.value },
                         }))
                       }
                     />
-                  </label>
-
-                  <label className="tv-field">
-                    <span className="tv-label">Account</span>
-                    <select
-                      className="tv-select"
-                      value={form.account_id}
-                      onChange={e =>
-                        setEditForm(f => ({
-                          ...f,
-                          [r.recurring_id]: {
-                            ...form,
-                            account_id: +e.target.value,
-                          },
-                        }))
-                      }
-                    >
-                      {accounts.map(a => (
-                        <option key={a.account_id} value={a.account_id}>
-                          {a.name}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-
-                  <label className="tv-field">
-                    <span className="tv-label">Amount ($)</span>
-                    <input
-                      className="tv-input"
-                      type="number"
-                      step="0.01"
-                      value={form.amount ?? 0}
-                      onChange={e =>
-                        setEditForm(f => ({
-                          ...f,
-                          [r.recurring_id]: {
-                            ...form,
-                            amount: parseFloat(e.target.value),
-                          },
-                        }))
-                      }
-                    />
-                  </label>
-
-                  <label className="tv-field">
-                    <span className="tv-label">Action</span>
-                    <select
-                      className="tv-select"
-                      value={form.direction}
-                      onChange={e =>
-                        setEditForm(f => ({
-                          ...f,
-                          [r.recurring_id]: {
-                            ...form,
-                            direction: e.target.value as Dir,
-                          },
-                        }))
-                      }
-                    >
-                      <option value="deposit">Deposit</option>
-                      <option value="withdrawal">Withdrawal</option>
-                    </select>
-                  </label>
-
-                  <label className="tv-field">
-                    <span className="tv-label">Frequency</span>
-                    <select
-                      className="tv-select"
-                      value={form.frequency}
-                      onChange={e =>
-                        setEditForm(f => ({
-                          ...f,
-                          [r.recurring_id]: {
-                            ...form,
-                            frequency: e.target.value as Freq,
-                            next_run_date: form.start_date
-                              ? addFreq(form.start_date, e.target.value as Freq)
-                              : form.next_run_date,
-                          },
-                        }))
-                      }
-                    >
-                      <option value="daily">Daily</option>
-                      <option value="weekly">Weekly</option>
-                      <option value="monthly">Monthly</option>
-                      <option value="yearly">Yearly</option>
-                    </select>
                   </label>
 
                   <label className="tv-field">
@@ -459,6 +467,85 @@ export default function RecurringTab(): JSX.Element {
                         }))
                       }}
                     />
+                  </label>
+
+                  <label className="tv-field">
+                    <span className="tv-label">Account</span>
+                    <select
+                      className="tv-select"
+                      value={form.account_id}
+                      onChange={e =>
+                        setEditForm(f => ({
+                          ...f,
+                          [r.recurring_id]: { ...form, account_id: +e.target.value },
+                        }))
+                      }
+                    >
+                      {accounts.map(a => (
+                        <option key={a.account_id} value={a.account_id}>
+                          {a.name}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+
+                  <label className="tv-field">
+                    <span className="tv-label">Amount ($)</span>
+                    <input
+                      className="tv-input"
+                      type="number"
+                      step="1"
+                      value={form.amount ?? 0}
+                      onChange={e =>
+                        setEditForm(f => ({
+                          ...f,
+                          [r.recurring_id]: { ...form, amount: parseFloat(e.target.value) },
+                        }))
+                      }
+                    />
+                  </label>
+
+                  <label className="tv-field">
+                    <span className="tv-label">Action</span>
+                    <select
+                      className="tv-select"
+                      value={form.direction}
+                      onChange={e =>
+                        setEditForm(f => ({
+                          ...f,
+                          [r.recurring_id]: { ...form, direction: e.target.value as Dir },
+                        }))
+                      }
+                    >
+                      <option value="deposit">Deposit</option>
+                      <option value="withdrawal">Withdrawal</option>
+                    </select>
+                  </label>
+
+                  <label className="tv-field">
+                    <span className="tv-label">Frequency</span>
+                    <select
+                      className="tv-select"
+                      value={form.frequency}
+                      onChange={e => {
+                        const freq = e.target.value as Freq
+                        setEditForm(f => ({
+                          ...f,
+                          [r.recurring_id]: {
+                            ...form,
+                            frequency: freq,
+                            next_run_date: form.start_date
+                              ? addFreq(form.start_date, freq)
+                              : form.next_run_date,
+                          },
+                        }))
+                      }}
+                    >
+                      <option value="daily">Daily</option>
+                      <option value="weekly">Weekly</option>
+                      <option value="monthly">Monthly</option>
+                      <option value="yearly">Yearly</option>
+                    </select>
                   </label>
 
                   <label className="tv-field">
@@ -528,7 +615,6 @@ export default function RecurringTab(): JSX.Element {
                     >
                       Edit
                     </button>
-                    {/* Delete removed from view mode */}
                   </div>
                 </>
               )}

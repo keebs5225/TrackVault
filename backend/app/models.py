@@ -1,4 +1,4 @@
-#backend/app/models.py
+# backend/app/models.py
 from datetime import datetime
 from typing import Optional, List
 from sqlmodel import SQLModel, Field, Relationship
@@ -7,7 +7,6 @@ from sqlalchemy.dialects.postgresql import ENUM as PGEnum
 import enum
 
 #–––– Enums –––––––––––––––––––––––––––––––––––––––––––––––––––––––––––
-
 class BudgetPeriod(str, enum.Enum):
     weekly  = "weekly"
     monthly = "monthly"
@@ -29,9 +28,12 @@ class TransactionDirection(str, enum.Enum):
     deposit    = "deposit"
     withdrawal = "withdrawal"
 
+class Priority(str, enum.Enum):
+    low  = "low"
+    med  = "med"
+    high = "high"
 
 #–––– User ––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––
-
 class User(SQLModel, table=True):
     user_id:       int        = Field(default=None, primary_key=True)
     name:          str
@@ -40,15 +42,14 @@ class User(SQLModel, table=True):
     created_at:    datetime   = Field(default_factory=datetime.utcnow)
     updated_at:    datetime   = Field(default_factory=datetime.utcnow)
 
-    accounts:      List["Account"]             = Relationship(back_populates="owner")
-    transactions:  List["Transaction"]         = Relationship(back_populates="user")
-    budgets:       List["Budget"]              = Relationship(back_populates="owner")
-    recurrings:    List["RecurringTransaction"]= Relationship(back_populates="owner")
-    goals:         List["Goal"]                = Relationship(back_populates="owner")
+    accounts:      List["Account"]              = Relationship(back_populates="owner")
+    transactions:  List["Transaction"]          = Relationship(back_populates="user")
+    budgets:       List["Budget"]               = Relationship(back_populates="owner")
+    recurrings:    List["RecurringTransaction"] = Relationship(back_populates="owner")
+    goals:         List["Goal"]                 = Relationship(back_populates="owner")
 
 
 #–––– Account –––––––––––––––––––––––––––––––––––––––––––––––––––––––––
-
 class Account(SQLModel, table=True):
     __tablename__ = "account"
 
@@ -68,13 +69,12 @@ class Account(SQLModel, table=True):
     created_at:   datetime    = Field(default_factory=datetime.utcnow)
     updated_at:   datetime    = Field(default_factory=datetime.utcnow)
 
-    owner:        "User"             = Relationship(back_populates="accounts")
-    transactions: List["Transaction"] = Relationship(back_populates="account")
+    owner:        "User"                       = Relationship(back_populates="accounts")
+    transactions: List["Transaction"]          = Relationship(back_populates="account")
     recurrings:   List["RecurringTransaction"] = Relationship(back_populates="account")
 
 
 #–––– Transaction ––––––––––––––––––––––––––––––––––––––––––––––––––––––
-
 class Transaction(SQLModel, table=True):
     __tablename__ = "transaction"
 
@@ -85,8 +85,7 @@ class Transaction(SQLModel, table=True):
     amount:         float                = Field(..., description="Positive amount")
     date:           datetime             = Field(default_factory=datetime.utcnow)
     account_id:     int                  = Field(foreign_key="account.account_id", index=True)
-    # Python field name "type" maps to DB column "direction"
-    direction:           TransactionDirection = Field(
+    direction:      TransactionDirection = Field(
         sa_column=Column(
             "direction",
             PGEnum(TransactionDirection, name="transaction_direction", create_type=False),
@@ -97,12 +96,11 @@ class Transaction(SQLModel, table=True):
     created_at:     datetime             = Field(default_factory=datetime.utcnow)
     updated_at:     datetime             = Field(default_factory=datetime.utcnow)
 
-    user:    "User"    = Relationship(back_populates="transactions")
-    account: Account    = Relationship(back_populates="transactions")
+    user:    "User"   = Relationship(back_populates="transactions")
+    account: Account  = Relationship(back_populates="transactions")
 
 
 #–––– Budget ––––––––––––––––––––––––––––––––––––––––––––––––––––––––––
-
 class Section(str, enum.Enum):
     income           = "income"
     fixed            = "fixed"
@@ -124,13 +122,13 @@ class Budget(SQLModel, table=True):
 
 
 #–––– RecurringTransaction –––––––––––––––––––––––––––––––––––––––––––––
-
 class RecurringTransaction(SQLModel, table=True):
     __tablename__ = "recurring_transaction"
 
     recurring_id:  int        = Field(default=None, primary_key=True)
     user_id:       int        = Field(foreign_key="user.user_id", index=True)
     account_id:    int        = Field(foreign_key="account.account_id")
+
     title:         Optional[str] = None
     description:   Optional[str] = None
     direction:     TransactionDirection = Field(
@@ -154,7 +152,6 @@ class RecurringTransaction(SQLModel, table=True):
 
 
 #–––– Goals & Deposits ––––––––––––––––––––––––––––––––––––––––––––––––
-
 class Goal(SQLModel, table=True):
     __tablename__ = "goal"
 
@@ -164,10 +161,17 @@ class Goal(SQLModel, table=True):
     description:   Optional[str] = None
     target_amount: float
     target_date:   datetime
+    priority:      Priority   = Field(
+        sa_column=Column(
+            PGEnum(Priority, name="priority_enum", create_type=False),
+            nullable=False,
+            server_default="med"
+        )
+    )
     created_at:    datetime   = Field(default_factory=datetime.utcnow)
     updated_at:    datetime   = Field(default_factory=datetime.utcnow)
 
-    owner:    "User"       = Relationship(back_populates="goals")
+    owner:    "User"              = Relationship(back_populates="goals")
     deposits: List["GoalDeposit"] = Relationship(back_populates="goal")
 
 

@@ -1,13 +1,23 @@
 // frontend/src/pages/TransactionsPageTabs/TransactionsTab.tsx
-import React, { useState, FormEvent } from 'react'
+import React, { useState, FormEvent, useMemo } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import Spinner from '../../components/Spinner'
 import { fetchAccounts } from '../../services/accounts'
-import { fetchTransactions, createTransaction, updateTransaction, deleteTransaction } from '../../services/transactions'
-import type { TransactionRead, TransactionCreate, TransactionUpdate, AccountRead, Paged } from '../../types'
-import "../../styles/global.css"
-import "../../styles/transactions.css"
-
+import {
+  fetchTransactions,
+  createTransaction,
+  updateTransaction,
+  deleteTransaction,
+} from '../../services/transactions'
+import type {
+  TransactionRead,
+  TransactionCreate,
+  TransactionUpdate,
+  AccountRead,
+  Paged,
+} from '../../types'
+import '../../styles/global.css'
+import '../../styles/transactions.css'
 
 function capitalize(str: string) {
   return str.charAt(0).toUpperCase() + str.slice(1)
@@ -15,16 +25,32 @@ function capitalize(str: string) {
 
 const pageSize = 100
 
+/* ---------- sorting ------------ */
+type BaseSortKey =
+  | 'date_desc'
+  | 'date_asc'
+  | 'amount_desc'
+  | 'amount_asc'
+  | 'title_az'
+  | 'title_za'
+  | 'account_az'
+  | 'deposit_first'
+  | 'withdraw_first'
+
+type SortKey = BaseSortKey | `acc_${number}` // dynamic “account first” keys
+
 export default function TransactionsTab(): JSX.Element {
   const qc = useQueryClient()
 
-  // ── Lookups ──────────────────────────────────────────
+  const todayISO = useMemo(() => new Date().toISOString().split('T')[0], [])
+
+  /* Lookups */
   const { data: accounts = [] } = useQuery<AccountRead[], Error>({
     queryKey: ['accounts'],
     queryFn: fetchAccounts,
   })
 
-  // ── Fetch transactions ───────────────────────────────
+  /* Fetch transactions */
   const {
     data: txs = {
       items: [],
@@ -40,7 +66,7 @@ export default function TransactionsTab(): JSX.Element {
     queryFn: () => fetchTransactions({ page: 1, page_size: pageSize }),
   })
 
-  // ── Mutations ────────────────────────────────────────
+  /* Mutations */
   const createMut = useMutation<TransactionRead, Error, TransactionCreate>({
     mutationFn: createTransaction,
     onSuccess: () => {
@@ -48,16 +74,17 @@ export default function TransactionsTab(): JSX.Element {
       qc.invalidateQueries({ queryKey: ['accounts'] })
     },
   })
-  const updateMut = useMutation<TransactionRead, Error, { id: number; data: TransactionUpdate }>({
+  const updateMut = useMutation<
+    TransactionRead,
+    Error,
+    { id: number; data: TransactionUpdate }
+  >({
     mutationFn: ({ id, data }) => updateTransaction(id, data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['transactions'] })
       qc.invalidateQueries({ queryKey: ['accounts'] })
     },
-    onError: (err) => {
-      // Handle error if necessary
-      console.error("Update failed:", err)
-    }
+    onError: err => console.error('Update failed:', err),
   })
 
   const deleteMut = useMutation<void, Error, number>({
@@ -68,23 +95,72 @@ export default function TransactionsTab(): JSX.Element {
     },
   })
 
-  // ── UI state ─────────────────────────────────────────
+  /* UI state */
   const [showForm, setShowForm] = useState(false)
 
-  // Create form
+  // create form
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
-  const [date, setDate] = useState('')
+  const [date, setDate] = useState(todayISO)
   const [acct, setAcct] = useState<number | ''>('')
   const [amount, setAmount] = useState('')
   const [direction, setDirection] = useState<'deposit' | 'withdrawal'>('deposit')
 
-  // Inline edit
+  // inline edit
   const [editing, setEditing] = useState<Record<number, boolean>>({})
   const [editForm, setEditForm] = useState<Record<number, TransactionUpdate>>({})
 
+  // sort state
+  const [sortBy, setSortBy] = useState<SortKey>('date_desc')
+
   const acctName = (id: number) =>
     accounts.find(a => a.account_id === id)?.name ?? '—'
+
+  /* Sort functions */
+  const defaultTieBreak = (a: TransactionRead, b: TransactionRead) =>
+    new Date(b.date).getTime() - new Date(a.date).getTime() // newest first as secondary criteria
+
+  const SORTS: Record<SortKey, (a: TransactionRead, b: TransactionRead) => number> =
+    useMemo(() => {
+      const base: Record<BaseSortKey, (a: TransactionRead, b: TransactionRead) => number> = {
+        date_desc: (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
+        date_asc: (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime(),
+        amount_desc: (a, b) => b.amount - a.amount,
+        amount_asc: (a, b) => a.amount - b.amount,
+        title_az: (a, b) => a.title.localeCompare(b.title),
+        title_za: (a, b) => b.title.localeCompare(a.title),
+        account_az: (a, b) =>
+          acctName(a.account_id).localeCompare(acctName(b.account_id)),
+        deposit_first: (a, b) =>
+          (a.direction === 'withdrawal' ? 1 : 0) - (b.direction === 'withdrawal' ? 1 : 0),
+        withdraw_first: (a, b) =>
+          (a.direction === 'deposit' ? 1 : 0) - (b.direction === 'deposit' ? 1 : 0),
+      }
+
+      // build account-first keys
+      const accSortsEntries = accounts.map<[SortKey, (a: TransactionRead, b: TransactionRead) => number]>(
+        acc => {
+          const key: SortKey = `acc_${acc.account_id}`
+          return [
+            key,
+            (a, b) => {
+              const aIs = a.account_id === acc.account_id
+              const bIs = b.account_id === acc.account_id
+              if (aIs && !bIs) return -1
+              if (!aIs && bIs) return 1
+              return defaultTieBreak(a, b)
+            },
+          ]
+        }
+      )
+
+      return { ...base, ...Object.fromEntries(accSortsEntries) }
+    }, [accounts])
+
+  const sortedTxs = useMemo(
+    () => [...txs.items].sort(SORTS[sortBy]),
+    [txs.items, SORTS, sortBy]
+  )
 
   function handleAdd(e: FormEvent) {
     e.preventDefault()
@@ -99,7 +175,7 @@ export default function TransactionsTab(): JSX.Element {
     })
     setTitle('')
     setDescription('')
-    setDate('')
+    setDate(todayISO)
     setAcct('')
     setAmount('')
     setDirection('deposit')
@@ -116,7 +192,7 @@ export default function TransactionsTab(): JSX.Element {
     )
   }
 
-  // ── Summary numbers ──────────────────────────────────
+  /* Summary */
   const showing = txs.items.length
   const total = txs.total
 
@@ -124,16 +200,49 @@ export default function TransactionsTab(): JSX.Element {
     <section className="transactions-page">
       <h1>Transactions</h1>
 
-      {/* Toggle Add Form */}
-      <button
-        className={`btn ${showForm ? 'btn-secondary' : 'btn-primary'}`}
-        onClick={() => setShowForm(s => !s)}
-      >
-        {showForm ? 'Close Form' : '+ New Transaction'}
-      </button>
+      <div className="header-row">
+        <button
+          className={`btn ${showForm ? 'btn-secondary' : 'btn-primary'}`}
+          onClick={() => setShowForm(s => !s)}
+        >
+          {showForm ? 'Close Form' : '+ New Transaction'}
+        </button>
 
-      {/* Summary */}
-      <p className="summary">Showing {showing} of {total}</p>
+        {/* Sort dropdown with optgroups */}
+        <select
+          className="tv-select sort-select"
+          value={sortBy}
+          onChange={e => setSortBy(e.target.value as SortKey)}
+        >
+          <optgroup label="Title">
+            <option value="title_az">Title (A→Z)</option>
+            <option value="title_za">Title (Z→A)</option>
+          </optgroup>
+
+          <optgroup label="Date">
+            <option value="date_desc">Date (Newest)</option>
+            <option value="date_asc">Date (Oldest)</option>
+          </optgroup>
+
+          <optgroup label="Account">
+            {accounts.map(a => (<option key={a.account_id} value={`acc_${a.account_id}`}>{a.name}</option>))}
+          </optgroup>
+
+          <optgroup label="Amount">
+            <option value="amount_desc">Amount (Highest)</option>
+            <option value="amount_asc">Amount (Lowest)</option>
+          </optgroup>
+
+          <optgroup label="Action">
+            <option value="deposit_first">Deposits</option>
+            <option value="withdraw_first">Withdrawals</option>
+          </optgroup>
+        </select>
+      </div>
+
+      <p className="summary">
+        Showing {showing} of {total}
+      </p>
 
       {/* Add form */}
       {showForm && (
@@ -150,6 +259,16 @@ export default function TransactionsTab(): JSX.Element {
           </label>
 
           <label className="tv-field">
+            <span className="tv-label">Description (Optional)</span>
+            <input
+              className="tv-input"
+              placeholder="Description"
+              value={description}
+              onChange={e => setDescription(e.target.value)}
+            />
+          </label>
+
+          <label className="tv-field">
             <span className="tv-label">Date of Transaction</span>
             <input
               className="tv-input"
@@ -157,16 +276,6 @@ export default function TransactionsTab(): JSX.Element {
               value={date}
               onChange={e => setDate(e.target.value)}
               required
-            />
-          </label>
-
-          <label className="tv-field">
-            <span className="tv-label">Description (optional)</span>
-            <input
-              className="tv-input"
-              placeholder="Description"
-              value={description}
-              onChange={e => setDescription(e.target.value)}
             />
           </label>
 
@@ -188,11 +297,11 @@ export default function TransactionsTab(): JSX.Element {
           </label>
 
           <label className="tv-field">
-            <span className="tv-label">Amount ($)</span>
+            <span className="tv-label">Amount</span>
             <input
               className="tv-input"
               type="number"
-              placeholder="0.00"
+              placeholder="$0.00"
               step="0.01"
               value={amount}
               onChange={e => setAmount(e.target.value)}
@@ -201,7 +310,7 @@ export default function TransactionsTab(): JSX.Element {
           </label>
 
           <label className="tv-field">
-            <span className="tv-label">Action (Deposit/Withdraw)</span>
+            <span className="tv-label">Action</span>
             <select
               className="tv-select"
               value={direction}
@@ -226,7 +335,7 @@ export default function TransactionsTab(): JSX.Element {
 
       {/* List */}
       <div className="transactions-grid">
-        {txs.items.map(tx => {
+        {sortedTxs.map(tx => {
           const isEdit = !!editing[tx.transaction_id]
           const base: TransactionUpdate = {
             title: tx.title,
@@ -257,6 +366,20 @@ export default function TransactionsTab(): JSX.Element {
                   </label>
 
                   <label className="tv-field">
+                    <span className="tv-label">Description</span>
+                    <input
+                      className="tv-input"
+                      value={form.description}
+                      onChange={e =>
+                        setEditForm(f => ({
+                          ...f,
+                          [tx.transaction_id]: { ...form, description: e.target.value },
+                        }))
+                      }
+                    />
+                  </label>
+
+                  <label className="tv-field">
                     <span className="tv-label">Date of Transaction</span>
                     <input
                       className="tv-input"
@@ -266,20 +389,6 @@ export default function TransactionsTab(): JSX.Element {
                         setEditForm(f => ({
                           ...f,
                           [tx.transaction_id]: { ...form, date: e.target.value },
-                        }))
-                      }
-                    />
-                  </label>
-
-                  <label className="tv-field">
-                    <span className="tv-label">Description (optional)</span>
-                    <input
-                      className="tv-input"
-                      value={form.description}
-                      onChange={e =>
-                        setEditForm(f => ({
-                          ...f,
-                          [tx.transaction_id]: { ...form, description: e.target.value },
                         }))
                       }
                     />
@@ -310,7 +419,7 @@ export default function TransactionsTab(): JSX.Element {
                     <input
                       className="tv-input"
                       type="number"
-                      step="0.01"
+                      step="1"
                       value={form.amount}
                       onChange={e =>
                         setEditForm(f => ({
@@ -325,7 +434,7 @@ export default function TransactionsTab(): JSX.Element {
                   </label>
 
                   <label className="tv-field">
-                    <span className="tv-label">Action (Deposit/Withdraw)</span>
+                    <span className="tv-label">Action</span>
                     <select
                       className="tv-select"
                       value={form.direction}
@@ -344,7 +453,6 @@ export default function TransactionsTab(): JSX.Element {
                     </select>
                   </label>
 
-                  {/* NEW footer with delete on the left */}
                   <div className="tv-actions--split">
                     <div className="left">
                       <button
@@ -381,7 +489,8 @@ export default function TransactionsTab(): JSX.Element {
               ) : (
                 <>
                   <p>
-                    <b>{capitalize(tx.title)}</b> — {new Date(tx.date).toLocaleDateString()} —{' '}
+                    <b>{capitalize(tx.title)}</b> —{' '}
+                    {new Date(tx.date).toLocaleDateString()} —{' '}
                     <em>{tx.direction.toUpperCase()}</em>
                   </p>
                   {tx.description && (
@@ -389,12 +498,8 @@ export default function TransactionsTab(): JSX.Element {
                       <strong>Description:</strong> {tx.description}
                     </p>
                   )}
-                  <p>
-                    <strong>Account:</strong> {acctName(tx.account_id)}
-                  </p>
-                  <p>
-                    <strong>Amount:</strong> ${tx.amount.toFixed(2)}
-                  </p>
+                  <p><strong>Account:</strong>{' '}{acctName(tx.account_id)}</p>
+                  <p><strong>Amount:</strong> ${tx.amount.toFixed(2)}</p>
 
                   <div className="tv-actions">
                     <button
@@ -406,7 +511,6 @@ export default function TransactionsTab(): JSX.Element {
                     >
                       Edit
                     </button>
-                    {/* Delete removed from view mode intentionally */}
                   </div>
                 </>
               )}

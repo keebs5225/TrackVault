@@ -39,19 +39,7 @@ export default function Topbar() {
       <Link to="/dashboard" className="topbar-logo">
         TrackVault
       </Link>
-
-      {/* ─── Global Search ────────────────────────────── */}
-      <form className="topbar-search-form" onSubmit={handleSearchSubmit}>
-        <input
-          type="text"
-          className="topbar-search-input"
-          placeholder="Search..."
-          value={query}
-          onChange={e => setQuery(e.target.value)}
-          aria-label="Global search"
-        />
-      </form>
-
+      
       <LightDarkToggle />
 
     </header>

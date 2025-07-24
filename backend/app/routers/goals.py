@@ -7,10 +7,7 @@ from datetime import datetime
 
 from app.db import get_session
 from app.models import Goal, GoalDeposit
-from app.schemas.goal import (
-    GoalCreate, GoalRead, GoalUpdate,
-    GoalDepositCreate, GoalDepositRead
-)
+from app.schemas.goal import ( GoalCreate, GoalRead, GoalUpdate,GoalDepositCreate, GoalDepositRead)
 from app.core.security import get_current_user
 
 router = APIRouter(tags=["goals"])

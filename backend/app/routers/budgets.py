@@ -1,4 +1,4 @@
-#backend/app/routers/budgets.py
+# backend/app/routers/budgets.py
 from typing import List
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlmodel.ext.asyncio.session import AsyncSession
@@ -11,6 +11,7 @@ from app.db import get_session
 
 # ── Router setup ───────────────────────────────────────────
 router = APIRouter(tags=["budgets"])
+
 
 # ── Create a budget ───────────────────────────────────────
 @router.post("", response_model=BudgetRead, status_code=status.HTTP_201_CREATED)
@@ -32,9 +33,7 @@ async def read_budgets(
     current=Depends(get_current_user),
     session: AsyncSession = Depends(get_session),
 ):
-    result = await session.exec(
-        select(Budget).where(Budget.user_id == current.user_id)
-    )
+    result = await session.exec(select(Budget).where(Budget.user_id == current.user_id))
     return result.all()
 
 

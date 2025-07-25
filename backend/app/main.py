@@ -11,9 +11,9 @@ from app.models import RecurringTransaction, Transaction
 
 # ── Routers ─────────────────────────────────────────────
 from app.routers import auth, users, accounts, transactions
-from app.routers.budgets   import router as budgets_router
+from app.routers.budgets import router as budgets_router
 from app.routers.recurring import router as recurring_router
-from app.routers.goals     import router as goals_router
+from app.routers.goals import router as goals_router
 from app.routers.calculators import router as calculators_router
 
 # ── App setup ─────────────────────────────────────────────
@@ -28,6 +28,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
 # ── Startup: create tables & schedule recurring ──────
 @app.on_event("startup")
 async def on_startup():
@@ -37,15 +38,17 @@ async def on_startup():
     sched.add_job(run_recurring, trigger="cron", hour=0, minute=0)
     sched.start()
 
+
 # ── Routers ───────────────────────────────────────
-app.include_router(auth,             prefix="/auth",        tags=["auth"])
-app.include_router(users,            prefix="/users",       tags=["users"])
-app.include_router(accounts,         prefix="/accounts",    tags=["accounts"])
-app.include_router(transactions,     prefix="/transactions",tags=["transactions"])
-app.include_router(budgets_router,   prefix="/budgets",     tags=["budgets"])
-app.include_router(recurring_router, prefix="/recurring",   tags=["recurring"])
-app.include_router(goals_router,     prefix="/goals",       tags=["goals"])
+app.include_router(auth, prefix="/auth", tags=["auth"])
+app.include_router(users, prefix="/users", tags=["users"])
+app.include_router(accounts, prefix="/accounts", tags=["accounts"])
+app.include_router(transactions, prefix="/transactions", tags=["transactions"])
+app.include_router(budgets_router, prefix="/budgets", tags=["budgets"])
+app.include_router(recurring_router, prefix="/recurring", tags=["recurring"])
+app.include_router(goals_router, prefix="/goals", tags=["goals"])
 app.include_router(calculators_router, prefix="/calculators", tags=["calculators"])
+
 
 # ── Health checkpoint ─────────────────────────────────
 @app.get("/health")
@@ -53,14 +56,18 @@ async def health(session: AsyncSession = Depends(get_session)):
     ok = await session.scalar(select(1))
     return {"status": "ok", "db": ok}
 
+
 # ── Process due recurring transactions ────────────────
 async def run_recurring():
     async with get_session() as session:
         now = datetime.utcnow()
-        recs = (await session.exec(
-            select(RecurringTransaction)
-              .where(RecurringTransaction.next_run_date <= now)
-        )).all()
+        recs = (
+            await session.exec(
+                select(RecurringTransaction).where(
+                    RecurringTransaction.next_run_date <= now
+                )
+            )
+        ).all()
 
         for rec in recs:
             tx = Transaction(

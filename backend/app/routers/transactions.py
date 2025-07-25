@@ -6,12 +6,18 @@ from sqlalchemy import func, select
 from sqlmodel.ext.asyncio.session import AsyncSession
 from app.db import get_session
 from app.models import Transaction, User, Account
-from app.schemas.transactions import ( TransactionCreate, TransactionRead, TransactionUpdate, TransactionReadPage )
+from app.schemas.transactions import (
+    TransactionCreate,
+    TransactionRead,
+    TransactionUpdate,
+    TransactionReadPage,
+)
 from app.core.security import get_current_user
 
 
 # ── Router setup ───────────────────────────────────────────
 router = APIRouter(tags=["transactions"])
+
 
 # ── List transactions with filters & pagination ────────────
 @router.get(
@@ -23,8 +29,8 @@ async def list_transactions(
     *,
     page: int = Query(1, ge=1),
     page_size: int = Query(10, ge=1),
-    start:   Optional[date] = Query(None),
-    end:     Optional[date] = Query(None),
+    start: Optional[date] = Query(None),
+    end: Optional[date] = Query(None),
     account: Optional[int] = Query(None),
     current: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_session),
@@ -35,20 +41,18 @@ async def list_transactions(
     if start:
         q = q.where(Transaction.date >= datetime.combine(start, datetime.min.time()))
     if end:
-        q = q.where(Transaction.date <= datetime.combine(end,   datetime.max.time()))
+        q = q.where(Transaction.date <= datetime.combine(end, datetime.max.time()))
     if account:
         q = q.where(Transaction.account_id == account)
 
     total = await session.scalar(
-        select(func.count())
-        .select_from(Transaction)
-        .where(q.whereclause)
+        select(func.count()).select_from(Transaction).where(q.whereclause)
     )
 
     q = (
         q.order_by(Transaction.date.desc())
-         .offset((page - 1) * page_size)
-         .limit(page_size)
+        .offset((page - 1) * page_size)
+        .limit(page_size)
     )
     result = await session.exec(q)
     items = result.scalars().all()
@@ -125,9 +129,9 @@ async def update_transaction(
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Transaction not found")
 
     # Old values
-    old_amount      = tx.amount
-    old_direction   = tx.direction
-    old_account_id  = tx.account_id
+    old_amount = tx.amount
+    old_direction = tx.direction
+    old_account_id = tx.account_id
 
     # Apply updates
     for field, value in payload.dict(exclude_unset=True).items():

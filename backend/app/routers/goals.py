@@ -6,12 +6,19 @@ from sqlmodel import select, func, delete
 from datetime import datetime
 from app.db import get_session
 from app.models import Goal, GoalDeposit
-from app.schemas.goal import ( GoalCreate, GoalRead, GoalUpdate,GoalDepositCreate, GoalDepositRead)
+from app.schemas.goal import (
+    GoalCreate,
+    GoalRead,
+    GoalUpdate,
+    GoalDepositCreate,
+    GoalDepositRead,
+)
 from app.core.security import get_current_user
 
 
 # ── Router setup ───────────────────────────────────────────
 router = APIRouter(tags=["goals"])
+
 
 # ── Create goal ───────────────────────────────────────
 @router.post("", response_model=GoalRead, status_code=status.HTTP_201_CREATED)
@@ -36,8 +43,7 @@ async def list_goals(
     # ── Sum deposits per goal ────────────────────────────
     stmt = (
         select(
-            Goal,
-            func.coalesce(func.sum(GoalDeposit.amount), 0).label("current_amount")
+            Goal, func.coalesce(func.sum(GoalDeposit.amount), 0).label("current_amount")
         )
         .where(Goal.user_id == current.user_id)
         .outerjoin(GoalDeposit, Goal.goal_id == GoalDeposit.goal_id)

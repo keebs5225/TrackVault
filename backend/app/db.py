@@ -2,7 +2,8 @@
 
 # ── Load env vars ─────────────────────────────────────────
 from dotenv import load_dotenv
-load_dotenv()   # ensure .env is loaded before os.getenv() call
+
+load_dotenv()  # ensure .env is loaded before os.getenv() call
 
 import os
 from typing import AsyncGenerator
@@ -22,6 +23,7 @@ async_session = sessionmaker(
     class_=AsyncSession,
     expire_on_commit=False,
 )
+
 
 # ── DB session dependency ─────────────────────────────────
 async def get_session() -> AsyncGenerator[AsyncSession, None]:

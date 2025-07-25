@@ -1,4 +1,4 @@
-#backend/app/routers/recurring.py
+# backend/app/routers/recurring.py
 from typing import List
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlmodel.ext.asyncio.session import AsyncSession
@@ -11,6 +11,7 @@ from app.db import get_session
 
 # ── Router setup ───────────────────────────────────────────
 router = APIRouter(tags=["recurring"])
+
 
 # ── Create recurring transaction ─────────────────────────
 @router.post("", response_model=RecurringRead, status_code=status.HTTP_201_CREATED)
@@ -33,7 +34,9 @@ async def read_recurrings(
     session: AsyncSession = Depends(get_session),
 ):
     result = await session.exec(
-        select(RecurringTransaction).where(RecurringTransaction.user_id == current.user_id)
+        select(RecurringTransaction).where(
+            RecurringTransaction.user_id == current.user_id
+        )
     )
     return result.all()
 

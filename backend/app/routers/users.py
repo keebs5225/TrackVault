@@ -29,12 +29,16 @@ async def get_current_user(
             raise ValueError
         user_id = int(sub)
     except Exception:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token"
+        )
 
     result = await session.exec(select(User).where(User.user_id == user_id))
     user = result.first()
     if not user:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found"
+        )
     return user
 
 
@@ -55,8 +59,12 @@ async def update_me(
 
     # ── Verify & re-hash password ──────────────────────────
     if "new_password" in data:
-        if not data.get("current_password") or not verify_password(data["current_password"], current.password_hash):
-            raise HTTPException(status.HTTP_400_BAD_REQUEST, detail="Current password is incorrect")
+        if not data.get("current_password") or not verify_password(
+            data["current_password"], current.password_hash
+        ):
+            raise HTTPException(
+                status.HTTP_400_BAD_REQUEST, detail="Current password is incorrect"
+            )
         current.password_hash = hash_password(data["new_password"])
 
     # ── Apply name/email updates ───────────────────────────

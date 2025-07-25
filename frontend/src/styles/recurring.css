@@ -1,6 +1,6 @@
 /* frontend/src/styles/recurring.css */
 
-/* Page wrapper */
+/* ── Page wrapper ───────────────────────────────────── */
 .recurring-page {
   max-width: 900px;
   margin: var(--space-lg) auto;
@@ -13,17 +13,18 @@
   margin-bottom: var(--space-lg);
 }
 
+/* ── Summary spacing ────────────────────────────────── */
 .recurring-page .summary {
   margin: var(--space-sm) 0 var(--space-md);
 }
 
-/* Grid of recurring items */
+/* ── Recurring grid ────────────────────────────────── */
 .recurring-grid {
   display: grid;
   gap: var(--space-md);
 }
 
-/* Individual recurring card */
+/* ── Card styling ───────────────────────────────────── */
 .recurring-card {
   background: var(--color-muted-bg);
   border-radius: var(--radius-md);
@@ -43,10 +44,13 @@
   color: var(--color-text);
 }
 
+/* ── Details text ──────────────────────────────────── */
 .recurring-details p {
   margin: var(--space-xs) 0;
   color: var(--color-text);
 }
+
+/* ── Actions row ───────────────────────────────────── */
 .recurring-actions {
   margin-top: auto;
   display: flex;

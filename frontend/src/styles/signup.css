@@ -1,6 +1,6 @@
 /* frontend/src/styles/signup.css */
 
-/* Centered auth form */
+/* ── Signup form container ─────────────────────────── */
 .signup-form {
   max-width: 400px;
   margin: var(--space-lg) auto;
@@ -13,12 +13,14 @@
   gap: var(--space-md);
 }
 
+/* ── Form heading ───────────────────────────────────── */
 .signup-form h2 {
   margin: 0 0 var(--space-md);
   text-align: center;
   color: var(--color-primary);
 }
 
+/* ── Input fields ───────────────────────────────────── */
 .signup-form input {
   width: 100%;
   padding: var(--space-sm);
@@ -27,11 +29,12 @@
   margin-top: var(--space-xs);
 }
 
+/* ── Submit button ──────────────────────────────────── */
 .signup-form button {
   align-self: center;
 }
 
-/* Dark mode */
+/* ── Dark mode overrides ────────────────────────────── */
 body.dark .signup-form {
   background: #1e1e1e;
   color: #e0e0e0;

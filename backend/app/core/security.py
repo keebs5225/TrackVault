@@ -35,7 +35,7 @@ def create_access_token(data: Dict[str, Any]) -> str:
     to_encode.update({"exp": expire})
     return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
 
-# ─── Dependency: extract current user from the Bearer token ────────────────
+# ─── Dependency: extract current user from Bearer token ────────────────
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/token")
 
 async def get_current_user(

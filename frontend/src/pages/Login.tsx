@@ -8,17 +8,19 @@ import Spinner from '../components/Spinner'
 import '../styles/global.css'
 import '../styles/login.css'
 
-interface LoginForm {
-  username: string
-  password: string
-}
-
 export default function Login() {
+  /* ── Router hooks ─────────────────────────────────── */
   const navigate = useNavigate()
   const location = useLocation()
-  const [flash, setFlash] = useState<string | null>(null)
-  const [form, setForm] = useState<LoginForm>({ username: '', password: '' })
 
+  /* ── Flash & form state ───────────────────────────── */
+  const [flash, setFlash] = useState<string | null>(null)
+  const [form, setForm] = useState<{ username: string; password: string }>({
+    username: '',
+    password: '',
+  })
+
+  /* ── Load flash from nav state ─────────────────────── */
   useEffect(() => {
     const state = location.state as { flash?: string }
     if (state?.flash) {
@@ -27,11 +29,8 @@ export default function Login() {
     }
   }, [location.state])
 
-  const loginMutation = useMutation<
-    any,
-    AxiosError<{ detail?: string }>,
-    void
-  >({
+  /* ── Login mutation ────────────────────────────────── */
+  const loginMutation = useMutation<any, AxiosError<{ detail?: string }>, void>({
     mutationFn: () =>
       API.post(
         '/auth/token',
@@ -52,18 +51,20 @@ export default function Login() {
       setFlash(msg)
     },
   })
-
   const { mutate, status } = loginMutation
 
+  /* ── Form input handler ───────────────────────────── */
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) =>
     setForm(f => ({ ...f, [e.target.name]: e.target.value }))
 
+  /* ── Form submit handler ──────────────────────────── */
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     setFlash(null)
     mutate()
   }
 
+  /* ── Render login form ────────────────────────────── */
   return (
     <form onSubmit={handleSubmit} className="profile-form">
       <h2>Log In</h2>

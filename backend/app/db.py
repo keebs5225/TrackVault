@@ -1,7 +1,8 @@
 # backend/app/db.py
 
+# ── Load env vars ─────────────────────────────────────────
 from dotenv import load_dotenv
-load_dotenv()   # ← ensure .env is loaded before we call os.getenv()
+load_dotenv()   # ensure .env is loaded before os.getenv() call
 
 import os
 from typing import AsyncGenerator
@@ -13,7 +14,7 @@ from sqlalchemy.orm import sessionmaker
 DATABASE_URL = os.getenv("DATABASE_URL")
 print("Using DB URL:", DATABASE_URL)
 
-# Create an async engine and session factory
+# ── Engine & session factory ──────────────────────────────
 engine = create_async_engine(DATABASE_URL, echo=True, future=True)
 
 async_session = sessionmaker(
@@ -22,7 +23,7 @@ async_session = sessionmaker(
     expire_on_commit=False,
 )
 
-# Dependency for FastAPI
+# ── DB session dependency ─────────────────────────────────
 async def get_session() -> AsyncGenerator[AsyncSession, None]:
     async with async_session() as session:
         yield session

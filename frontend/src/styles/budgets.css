@@ -1,6 +1,4 @@
-/* frontend/src/styles/budgets.css */
-
-/* Page wrapper */
+/* ── Page wrapper ───────────────────────────────────── */
 .budgets-page {
   max-width: 1000px;
   margin: var(--space-lg) auto;
@@ -13,12 +11,12 @@
   margin-bottom: var(--space-lg);
 }
 
-/* Toggle button spacing */
+/* ── Toggle button spacing ─────────────────────────── */
 .budgets-page > .btn {
   margin-bottom: var(--space-md);
 }
 
-/* Grid of budget sections */
+/* ── Grid of budget sections ───────────────────────── */
 .budgets-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
@@ -28,10 +26,10 @@
 .budgets-grid > div {
   display: flex;
   flex-direction: column;
-  gap: var(--space-xs); 
+  gap: var(--space-xs);
 }
 
-/* Budget cards */
+/* ── Budget cards ──────────────────────────────────── */
 .budget-card {
   background: var(--color-muted-bg);
   border-radius: var(--radius-md);
@@ -51,9 +49,11 @@
   font-size: 1.125rem;
   color: var(--color-text);
 }
-.budget-card p { margin: var(--space-xs) 0; }
+.budget-card p {
+  margin: var(--space-xs) 0;
+}
 
-/* Summary block */
+/* ── Summary block ─────────────────────────────────── */
 .summary-block {
   background: var(--color-muted-bg);
   border-radius: var(--radius-md);
@@ -69,35 +69,30 @@
   margin: var(--space-xs) 0;
 }
 
-/* EDIT MODE ONLY */
+/* ── Edit mode layout ──────────────────────────────── */
 .budget-card.is-editing .tv-actions--split {
   display: flex !important;
   flex-wrap: wrap;
   gap: var(--space-sm);
   margin-top: var(--space-md);
 }
-
-/* Flatten wrappers if present */
 .budget-card.is-editing .tv-actions--split > .left,
 .budget-card.is-editing .tv-actions--split > .right {
   display: contents !important;
 }
-
-/* Generic buttons*/
 .budget-card.is-editing .tv-actions--split .btn {
   flex: 1 1 140px;
   width: 100%;
   justify-content: center;
 }
 
-/* Reorder buttons */
+/* ── Edit button order ─────────────────────────────── */
 .budget-card.is-editing .tv-actions--split .btn-secondary { /* Discard */
   order: 1;
 }
 .budget-card.is-editing .tv-actions--split .btn-primary {   /* Save */
   order: 2;
 }
-
 .budget-card.is-editing .tv-actions--split .btn-danger {    /* Delete */
   order: 99;
   flex-basis: 100%;

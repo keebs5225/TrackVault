@@ -7,13 +7,18 @@ import '../styles/global.css'
 
 
 export default function Layout() {
+  // ── Layout wrapper ──────────────────────────────────────
   return (
     <div className="app-container">
+      {/* ── Sidebar nav ────────────────────────────────────── */}
       <Sidebar />
+
       <div className="main-content">
+        {/* ── Top navigation bar ────────────────────────────── */}
         <Topbar />
+
         <div className="main-body">
-          {/* this is where your child routes will render */}
+          {/* ── Render page content ─────────────────────────── */}
           <Outlet />
         </div>
       </div>

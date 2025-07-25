@@ -3,6 +3,8 @@ from datetime import datetime
 from pydantic import BaseModel, Field
 from typing import Optional
 
+
+# ── Base account schema ───────────────────────────────────
 class AccountBase(BaseModel):
     name: str
     account_type: Optional[str] = Field(
@@ -14,9 +16,13 @@ class AccountBase(BaseModel):
         description="starting balance"
     )
 
+
+# ── Input (creating) ────────────────────────────
 class AccountCreate(AccountBase):
     pass
 
+
+# ── Output (reading)  ────────────────────────────
 class AccountRead(AccountBase):
     account_id: int
     user_id:    int
@@ -26,6 +32,8 @@ class AccountRead(AccountBase):
     class Config:
         orm_mode = True
 
+
+# ── Input (updating)  ────────────────────────────
 class AccountUpdate(BaseModel):
     name:         Optional[str] = None
     account_type: Optional[str] = None

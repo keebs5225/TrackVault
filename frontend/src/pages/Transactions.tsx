@@ -4,15 +4,19 @@ import TransactionsTab from './TransactionsPageTabs/TransactionsTab'
 import RecurringTab    from './TransactionsPageTabs/RecurringTab'
 import '../styles/global.css'
 
-type Tab = 'transactions' | 'recurring'
-
 export default function TransactionsPage() {
-  const [tab, setTab] = useState<Tab>('transactions')
-  const tabs: Tab[] = ['transactions', 'recurring']
+  /* ── Tab selection state ───────────────────────── */
+  const [tab, setTab] = useState<'transactions' | 'recurring'>('transactions')
+  const tabs = ['transactions', 'recurring'] as const
 
   return (
     <section className="page-with-tabs">
-      <nav className="tabs-container" role="tablist" aria-label="Transactions navigation">
+      {/* ── Tab navigation ─────────────────────────────── */}
+      <nav
+        className="tabs-container"
+        role="tablist"
+        aria-label="Transactions navigation"
+      >
         {tabs.map(t => {
           const active = tab === t
           return (
@@ -20,7 +24,7 @@ export default function TransactionsPage() {
               key={t}
               role="tab"
               aria-selected={active}
-              className={`tab-btn ${active ? 'is-active' : ''}`}
+              className={`tab-btn${active ? ' is-active' : ''}`}
               onClick={() => setTab(t)}
             >
               {t.charAt(0).toUpperCase() + t.slice(1)}
@@ -29,6 +33,7 @@ export default function TransactionsPage() {
         })}
       </nav>
 
+      {/* ── Tab content ───────────────────────────────── */}
       {tab === 'transactions' && <TransactionsTab />}
       {tab === 'recurring'    && <RecurringTab />}
     </section>

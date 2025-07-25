@@ -23,9 +23,11 @@ type UpdatePayload = {
 }
 
 export default function Profile() {
+  /* ── Navigation & queryClient ────────────────────── */
   const navigate = useNavigate()
   const qc = useQueryClient()
 
+  /* ── Local state ─────────────────────────────────── */
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
   const [editing, setEditing] = useState(false)
@@ -34,6 +36,7 @@ export default function Profile() {
   const [showCurrent, setShowCurrent] = useState(false)
   const [showNew, setShowNew] = useState(false)
 
+  /* ── Load current user on mount ───────────────────── */
   useEffect(() => {
     API.get<User>('/users/me')
       .then((res: AxiosResponse<User>) => {
@@ -47,11 +50,13 @@ export default function Profile() {
       })
   }, [navigate])
 
+  /* ── Logout handler ───────────────────────────────── */
   const handleLogout = useCallback(() => {
     localStorage.removeItem('access_token')
     navigate('/login', { replace: true })
   }, [navigate])
 
+  /* ── Update mutation ───────────────────────────────── */
   const updateMutation: UseMutationResult<User, AxiosError, UpdatePayload> =
     useMutation<User, AxiosError, UpdatePayload>({
       mutationFn: data => API.patch<User>('/users/me', data).then(res => res.data),
@@ -67,6 +72,7 @@ export default function Profile() {
       },
     })
 
+  /* ── Delete account mutation ──────────────────────── */
   const deleteMutation: UseMutationResult<void, AxiosError, void> =
     useMutation<void, AxiosError, void>({
       mutationFn: () => API.delete<void>('/users/me').then(() => {}),
@@ -79,6 +85,7 @@ export default function Profile() {
       },
     })
 
+  /* ── Loading state ────────────────────────────────── */
   if (loading) {
     return (
       <div className="center">
@@ -92,6 +99,7 @@ export default function Profile() {
       <h1>Your Profile</h1>
 
       {editing ? (
+        /* ── Edit mode form ─────────────────────────── */
         <form
           className="profile-form"
           onSubmit={e => {
@@ -102,6 +110,7 @@ export default function Profile() {
         >
           {error && <p className="profile-error">{error}</p>}
 
+          {/* Name input */}
           <label>
             Name
             <input
@@ -112,6 +121,7 @@ export default function Profile() {
             />
           </label>
 
+          {/* Email input */}
           <label>
             Email
             <input
@@ -123,6 +133,7 @@ export default function Profile() {
             />
           </label>
 
+          {/* Current password toggle */}
           <label>
             Current Password
             <div className="password-wrapper">
@@ -145,6 +156,7 @@ export default function Profile() {
             </div>
           </label>
 
+          {/* New password toggle */}
           <label>
             New Password
             <div className="password-wrapper">
@@ -167,7 +179,7 @@ export default function Profile() {
             </div>
           </label>
 
-          {/* ------- Footer with delete on left, save/cancel on right ------- */}
+          {/* ── Footer actions (delete / save / cancel) ── */}
           <div className="tv-actions--split">
             <div className="left">
               <button
@@ -211,6 +223,7 @@ export default function Profile() {
           </div>
         </form>
       ) : (
+        /* ── Read-only view ───────────────────────────── */
         <>
           <div className="profile-details">
             <label>Name:</label>
@@ -220,18 +233,12 @@ export default function Profile() {
             <span>{user?.email}</span>
           </div>
 
-          {/* View-mode actions aligned right */}
+          {/* ── Actions (edit / logout) ─────────────────── */}
           <div className="tv-actions">
-            <button
-              className="btn btn-primary"
-              onClick={() => setEditing(true)}
-            >
+            <button className="btn btn-primary" onClick={() => setEditing(true)}>
               Edit Info
             </button>
-            <button
-              className="btn btn-secondary"
-              onClick={handleLogout}
-            >
+            <button className="btn btn-secondary" onClick={handleLogout}>
               Log Out
             </button>
           </div>

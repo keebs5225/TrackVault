@@ -1,17 +1,19 @@
-# backend/app/routers/accounts.py
+# backend/app/routers/accounts.py# ── Imports ──────────────────────────────────────────────────
 from typing import List
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlmodel.ext.asyncio.session import AsyncSession
 from sqlmodel import select
-
 from app.models import Account
 from app.schemas.account import AccountCreate, AccountRead, AccountUpdate
 from app.core.security import get_current_user
 from app.db import get_session
 
+
+# ── Router setup ────────────────────────────────────────────
 router = APIRouter(tags=["accounts"])
 
 
+# ── Create account ──────────────────────────────────────────
 @router.post("", response_model=AccountRead, status_code=status.HTTP_201_CREATED)
 async def create_account(
     account_in: AccountCreate,
@@ -25,6 +27,7 @@ async def create_account(
     return acct
 
 
+# ── Read user’s accounts ────────────────────────────────────
 @router.get("", response_model=List[AccountRead])
 async def read_accounts(
     current=Depends(get_current_user),
@@ -36,6 +39,7 @@ async def read_accounts(
     return result.all()
 
 
+# ── Update account ───────────────────────────────────────
 @router.patch("/{account_id}", response_model=AccountRead)
 async def update_account(
     account_id: int,
@@ -53,6 +57,7 @@ async def update_account(
     return acct
 
 
+# ── Delete account ───────────────────────────────────────
 @router.delete("/{account_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_account(
     account_id: int,

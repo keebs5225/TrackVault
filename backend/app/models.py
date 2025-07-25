@@ -6,7 +6,7 @@ from sqlalchemy import Column
 from sqlalchemy.dialects.postgresql import ENUM as PGEnum
 import enum
 
-#–––– Enums –––––––––––––––––––––––––––––––––––––––––––––––––––––––––––
+# ── Enums ─────────────────────────────────────────────────
 class BudgetPeriod(str, enum.Enum):
     weekly  = "weekly"
     monthly = "monthly"
@@ -33,7 +33,8 @@ class Priority(str, enum.Enum):
     med  = "med"
     high = "high"
 
-#–––– User ––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––
+
+# ── User model ─────────────────────────────────────────────
 class User(SQLModel, table=True):
     user_id:       int        = Field(default=None, primary_key=True)
     name:          str
@@ -49,7 +50,7 @@ class User(SQLModel, table=True):
     goals:         List["Goal"]                 = Relationship(back_populates="owner")
 
 
-#–––– Account –––––––––––––––––––––––––––––––––––––––––––––––––––––––––
+# ── Account model ──────────────────────────────────────────
 class Account(SQLModel, table=True):
     __tablename__ = "account"
 
@@ -74,7 +75,7 @@ class Account(SQLModel, table=True):
     recurrings:   List["RecurringTransaction"] = Relationship(back_populates="account")
 
 
-#–––– Transaction ––––––––––––––––––––––––––––––––––––––––––––––––––––––
+# ── Transaction model ──────────────────────────────────────
 class Transaction(SQLModel, table=True):
     __tablename__ = "transaction"
 
@@ -100,7 +101,7 @@ class Transaction(SQLModel, table=True):
     account: Account  = Relationship(back_populates="transactions")
 
 
-#–––– Budget ––––––––––––––––––––––––––––––––––––––––––––––––––––––––––
+# ── Budget model ───────────────────────────────────────────
 class Section(str, enum.Enum):
     income           = "income"
     fixed            = "fixed"
@@ -121,7 +122,7 @@ class Budget(SQLModel, table=True):
     owner:    "User"     = Relationship(back_populates="budgets")
 
 
-#–––– RecurringTransaction –––––––––––––––––––––––––––––––––––––––––––––
+# ── RecurringTransaction model ────────────────────────────
 class RecurringTransaction(SQLModel, table=True):
     __tablename__ = "recurring_transaction"
 
@@ -151,7 +152,7 @@ class RecurringTransaction(SQLModel, table=True):
     account: Account  = Relationship(back_populates="recurrings")
 
 
-#–––– Goals & Deposits ––––––––––––––––––––––––––––––––––––––––––––––––
+# ── Goal models ──────────────────────────────────
 class Goal(SQLModel, table=True):
     __tablename__ = "goal"
 
@@ -174,7 +175,7 @@ class Goal(SQLModel, table=True):
     owner:    "User"              = Relationship(back_populates="goals")
     deposits: List["GoalDeposit"] = Relationship(back_populates="goal")
 
-
+# ── Deposit models ──────────────────────────────────
 class GoalDeposit(SQLModel, table=True):
     __tablename__ = "goal_deposit"
 

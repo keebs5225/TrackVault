@@ -2,12 +2,7 @@
 import React, { useState, FormEvent, useMemo } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import Spinner from '../components/Spinner'
-import {
-  fetchAccounts,
-  createAccount,
-  updateAccount,
-  deleteAccount,
-} from '../services/accounts'
+import { fetchAccounts, createAccount, updateAccount, deleteAccount } from '../services/accounts'
 import type { AccountRead, AccountCreate, AccountUpdate } from '../types'
 import '../styles/global.css'
 import '../styles/accounts.css'
@@ -16,7 +11,7 @@ function capitalize(str: string) {
   return str.charAt(0).toUpperCase() + str.slice(1)
 }
 
-/* ---------- sorting ------------ */
+// ── Sorting functions ──────────────────────────────
 type SortKey =
   | 'balance_desc'
   | 'balance_asc'
@@ -96,7 +91,7 @@ export default function AccountsPage(): JSX.Element {
 
   const [sortBy, setSortBy] = useState<SortKey>('balance_desc')
 
-  // ── Hooks before any early returns ───────────────────
+  // ── Derived hooks ─────────────────
   const sortedAccounts = useMemo(
     () => [...accounts].sort(SORTS[sortBy]),
     [accounts, sortBy]
@@ -122,11 +117,11 @@ export default function AccountsPage(): JSX.Element {
       </section>
     )
   }
-
+  // ── Render ─────────────────────────────────────────
   return (
     <section className="accounts-page">
       <h1>Your Accounts</h1>
-
+      {/* ── Header: new account & sort ──────────────── */}
       <div className="header-row">
         <button
           className={`btn ${showForm ? 'btn-secondary' : 'btn-primary'}`}
@@ -156,11 +151,11 @@ export default function AccountsPage(): JSX.Element {
           </optgroup>
         </select>
       </div>
-
+      {/* ── Summary ──────────────────────────────────── */}
       <p className="summary">
         Total Accounts: {accounts.length} | Total Balance: ${totalBalance}
       </p>
-
+      {/* ── New Account Form ─────────────────────────── */}
       {showForm && (
         <form
           onSubmit={(e: FormEvent) => {
@@ -225,7 +220,7 @@ export default function AccountsPage(): JSX.Element {
           </div>
         </form>
       )}
-
+      {/* ── Accounts grid ───────────────────────────── */}
       <div className="accounts-grid">
         {sortedAccounts.map(a => {
           const isEdit = !!editing[a.account_id]
@@ -242,6 +237,7 @@ export default function AccountsPage(): JSX.Element {
             <div key={a.account_id} className={`account-card ${isEdit ? 'is-editing' : ''}`}>
               {isEdit ? (
                 <>
+                  {/* Edit mode fields */}                
                   <label className="tv-field">
                     <span className="tv-label">Title</span>
                     <input
@@ -290,7 +286,7 @@ export default function AccountsPage(): JSX.Element {
                       }
                     />
                   </label>
-
+                  {/* Edit mode actions */}
                   <div className="tv-actions--split">
                     <div className="left">
                       <button
@@ -323,6 +319,7 @@ export default function AccountsPage(): JSX.Element {
                 </>
               ) : (
                 <>
+                  {/* Read-only view */}
                   <h2>{a.name}</h2>
                   <p>
                     <strong>Type:</strong> {capitalize(a.account_type)}
@@ -330,7 +327,7 @@ export default function AccountsPage(): JSX.Element {
                   <p>
                     <strong>Balance:</strong> ${a.balance.toFixed(2)} {a.currency}
                   </p>
-
+                  {/* Card actions */}
                   <div className="tv-actions">
                     <button
                       className="btn btn-primary"

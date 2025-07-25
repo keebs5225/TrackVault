@@ -15,10 +15,11 @@ interface User {
 }
 
 export default function Topbar() {
+  // ── Navigation & state hooks ───────────────────────────
   const navigate = useNavigate()
   const [query, setQuery] = useState('')
 
-  // -- useQuery in object form, with generics --
+  // ── Fetch current user ──────────────────────────────────
   const { data: user } = useQuery<User, AxiosError>({
     queryKey: ['user'],
     queryFn: () =>
@@ -26,6 +27,7 @@ export default function Topbar() {
     retry: false,
   })
 
+  // ── Search submit handler ───────────────────────────────
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (query.trim()) {
@@ -33,15 +35,16 @@ export default function Topbar() {
     }
   }
 
+  // ── Render topbar ───────────────────────────────────────
   return (
     <header className="topbar">
-      {/* ─── Logo / Home Link ─────────────────────────── */}
+      {/* ── Logo link ─────────────────────────────────────── */}
       <Link to="/dashboard" className="topbar-logo">
         TrackVault
       </Link>
       
+      {/* ── Theme toggle ──────────────────────────────────── */}
       <LightDarkToggle />
-
     </header>
   )
 }

@@ -1,24 +1,19 @@
 # backend/app/routers/transactions.py
 from typing import Optional
 from datetime import date, datetime
-
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import func, select
 from sqlmodel.ext.asyncio.session import AsyncSession
-
 from app.db import get_session
 from app.models import Transaction, User, Account
-from app.schemas.transactions import (
-    TransactionCreate,
-    TransactionRead,
-    TransactionUpdate,
-    TransactionReadPage,
-)
+from app.schemas.transactions import ( TransactionCreate, TransactionRead, TransactionUpdate, TransactionReadPage )
 from app.core.security import get_current_user
 
+
+# ── Router setup ───────────────────────────────────────────
 router = APIRouter(tags=["transactions"])
 
-
+# ── List transactions with filters & pagination ────────────
 @router.get(
     "/",
     response_model=TransactionReadPage,
@@ -28,8 +23,8 @@ async def list_transactions(
     *,
     page: int = Query(1, ge=1),
     page_size: int = Query(10, ge=1),
-    start: Optional[date] = Query(None),
-    end: Optional[date] = Query(None),
+    start:   Optional[date] = Query(None),
+    end:     Optional[date] = Query(None),
     account: Optional[int] = Query(None),
     current: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_session),
@@ -66,6 +61,7 @@ async def list_transactions(
     )
 
 
+# ── Get one transaction ────────────────────────────────────
 @router.get(
     "/{tx_id}",
     response_model=TransactionRead,
@@ -82,6 +78,7 @@ async def get_transaction(
     return TransactionRead.model_validate(tx)
 
 
+# ── Create transaction & update balance ─────────────────
 @router.post(
     "/",
     response_model=TransactionRead,
@@ -111,6 +108,7 @@ async def create_transaction(
     return TransactionRead.model_validate(tx)
 
 
+# ── Update transaction & adjust balances ────────────────
 @router.patch(
     "/{tx_id}",
     response_model=TransactionRead,
@@ -126,16 +124,16 @@ async def update_transaction(
     if not tx or tx.user_id != current.user_id:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Transaction not found")
 
-    # old values
-    old_amount = tx.amount
-    old_direction = tx.direction
-    old_account_id = tx.account_id
+    # Old values
+    old_amount      = tx.amount
+    old_direction   = tx.direction
+    old_account_id  = tx.account_id
 
-    # apply updates
+    # Apply updates
     for field, value in payload.dict(exclude_unset=True).items():
         setattr(tx, field, value)
 
-    # reverse old effect
+    # Reverse old effect
     acct_old = await session.get(Account, old_account_id)
     if old_direction == "deposit":
         acct_old.balance -= old_amount
@@ -143,7 +141,7 @@ async def update_transaction(
         acct_old.balance += old_amount
     session.add(acct_old)
 
-    # apply new effect
+    # Apply new effect
     acct_new = await session.get(Account, tx.account_id)
     if tx.direction == "deposit":
         acct_new.balance += tx.amount
@@ -159,6 +157,7 @@ async def update_transaction(
     return TransactionRead.model_validate(tx)
 
 
+# ── Delete transaction & revert balance ────────────────
 @router.delete("/{tx_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_transaction(
     tx_id: int,

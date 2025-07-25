@@ -3,25 +3,16 @@ import React, { useState, FormEvent, useMemo } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import Spinner from '../../components/Spinner'
 import { fetchAccounts } from '../../services/accounts'
-import {
-  fetchRecurring,
-  createRecurring,
-  updateRecurring,
-  deleteRecurring,
-} from '../../services/recurring'
-import type {
-  AccountRead,
-  RecurringRead,
-  RecurringCreate,
-  RecurringUpdate,
-} from '../../types'
+import { fetchRecurring, createRecurring, updateRecurring, deleteRecurring } from '../../services/recurring'
+import type { AccountRead, RecurringRead, RecurringCreate, RecurringUpdate } from '../../types'
 import '../../styles/global.css'
 import '../../styles/recurring.css'
 
+// ── Types ─────────────────────────────────────────────
 type Dir = 'deposit' | 'withdrawal'
 type Freq = 'daily' | 'weekly' | 'monthly' | 'yearly'
 
-/* ------------ helpers ------------- */
+// ── Helpers ───────────────────────────────────────────
 const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1)
 const acctName = (acs: AccountRead[], id: number) =>
   acs.find(a => a.account_id === id)?.name ?? '—'
@@ -39,7 +30,7 @@ const addFreq = (isoDate: string, freq: Freq): string => {
   return d.toISOString().split('T')[0]
 }
 
-/* ------------ sorting ------------- */
+// ── Sorting Keys ──────────────────────────────────────
 type BaseSortKey =
   | 'start_desc'
   | 'start_asc'
@@ -58,13 +49,13 @@ type SortKey = BaseSortKey | `acc_${number}` | `freq_${Freq}`
 export default function RecurringTab(): JSX.Element {
   const qc = useQueryClient()
 
-  /* Lookups */
+  // ── Lookups ──────────────────────────────────────────
   const { data: accounts = [] } = useQuery<AccountRead[], Error>({
     queryKey: ['accounts'],
     queryFn: fetchAccounts,
   })
 
-  /* Fetch recurring */
+  // ── Fetch recurring items ────────────────────────────
   const {
     data: recs = [],
     isLoading,
@@ -75,7 +66,7 @@ export default function RecurringTab(): JSX.Element {
     queryFn: fetchRecurring,
   })
 
-  /* Mutations */
+  // ── Mutations ────────────────────────────────────────
   const createMut = useMutation<RecurringRead, Error, RecurringCreate>({
     mutationFn: createRecurring,
     onSuccess: () => {
@@ -102,12 +93,12 @@ export default function RecurringTab(): JSX.Element {
     },
   })
 
-  /* UI state */
+  // ── UI State ─────────────────────────────────────────
   const [showForm, setShowForm] = useState(false)
-
+  // ── “Today” constant ─────────────────────────────────
   const todayISO = useMemo(() => new Date().toISOString().split('T')[0], [])
 
-  // create form
+  // ── Create Form State ────────────────────────────────
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
   const [acct, setAcct] = useState<number | ''>('')
@@ -119,7 +110,7 @@ export default function RecurringTab(): JSX.Element {
 
   const nextRun = useMemo(() => (startDate ? addFreq(startDate, frequency) : ''), [startDate, frequency])
 
-  // edit state
+  // ── Edit Form State ──────────────────────────────────
   const [editing, setEditing] = useState<Record<number, boolean>>({})
   const [editForm, setEditForm] = useState<
     Record<
@@ -135,13 +126,13 @@ export default function RecurringTab(): JSX.Element {
     >
   >({})
 
-  // sort state
+  // ── Sort State ───────────────────────────────────────
   const [sortBy, setSortBy] = useState<SortKey>('start_desc')
 
   const time = (d: string | Date) => new Date(d).getTime()
   const defaultTie = (a: RecurringRead, b: RecurringRead) =>
     time(b.start_date) - time(a.start_date)
-
+  // ── Sort Functions ──────────────────────────────────
   const SORTS: Record<SortKey, (a: RecurringRead, b: RecurringRead) => number> = useMemo(() => {
     const base: Record<BaseSortKey, (a: RecurringRead, b: RecurringRead) => number> = {
       start_desc:   (a, b) => time(b.start_date) - time(a.start_date),
@@ -156,7 +147,7 @@ export default function RecurringTab(): JSX.Element {
       deposit_first:  (a, b) => (a.direction === 'withdrawal' ? 1 : 0) - (b.direction === 'withdrawal' ? 1 : 0),
       withdraw_first: (a, b) => (a.direction === 'deposit' ? 1 : 0) - (b.direction === 'deposit' ? 1 : 0),
     }
-
+    // per-account “first” sorts
     const accSorts = Object.fromEntries(
       accounts.map(acc => {
         const key: SortKey = `acc_${acc.account_id}`
@@ -172,7 +163,7 @@ export default function RecurringTab(): JSX.Element {
         ]
       })
     )
-
+    // frequency‐group sorts
     const freqSorts: Record<`freq_${Freq}`, (a: RecurringRead, b: RecurringRead) => number> = {
       freq_daily:   (a, b) => (a.frequency === 'daily'   ? -1 : b.frequency === 'daily'   ? 1 : defaultTie(a, b)),
       freq_weekly:  (a, b) => (a.frequency === 'weekly'  ? -1 : b.frequency === 'weekly'  ? 1 : defaultTie(a, b)),
@@ -184,7 +175,7 @@ export default function RecurringTab(): JSX.Element {
   }, [accounts])
 
   const sortedRecs = useMemo(() => [...recs].sort(SORTS[sortBy]), [recs, SORTS, sortBy])
-
+  // ── Handlers ────────────────────────────────────────
   function handleAdd(e: FormEvent) {
     e.preventDefault()
     if (!title || !acct || !amount || !startDate) return
@@ -200,7 +191,7 @@ export default function RecurringTab(): JSX.Element {
       next_run_date: nextRun,
       end_date: endDate || undefined,
     })
-
+    // reset form
     setTitle('')
     setDescription('')
     setAcct('')
@@ -215,14 +206,14 @@ export default function RecurringTab(): JSX.Element {
   if (isLoading) return <Spinner />
   if (isError) return <p className="error-message">{error?.message}</p>
 
-  /* Summary */
+  // ── Summary ──────────────────────────────────────────
   const showing = recs.length
   const total = recs.length
-
+  // ── Render ──────────────────────────────────────────
   return (
     <section className="recurring-page">
       <h1>Recurring Transactions</h1>
-
+      {/* Header row: Add button + Sort dropdown */}
       <div className="header-row">
         <button
           className={`btn ${showForm ? 'btn-secondary' : 'btn-primary'}`}
@@ -231,7 +222,6 @@ export default function RecurringTab(): JSX.Element {
           {showForm ? 'Close Form' : '+ New Recurring'}
         </button>
 
-        {/* Sort dropdown with groups */}
         <select
           className="tv-select sort-select"
           value={sortBy}
@@ -280,7 +270,7 @@ export default function RecurringTab(): JSX.Element {
       </div>
 
       <p className="summary">Showing {showing} of {total}</p>
-
+      {/* Add Recurring Form */}
       {showForm && (
         <form onSubmit={handleAdd} className="card tv-form-card tv-form">
           <label className="tv-field">
@@ -375,7 +365,7 @@ export default function RecurringTab(): JSX.Element {
             <span className="tv-label">Next Transaction (Auto)</span>
             <input className="tv-input" type="date" value={nextRun} readOnly />
           </label>
-
+          {/* Submit */}
           <div className="tv-actions">
             <button
               type="submit"
@@ -388,7 +378,7 @@ export default function RecurringTab(): JSX.Element {
         </form>
       )}
 
-      {/* List */}
+      {/* Recurring List */}
       <div className="transactions-grid">
         {sortedRecs.map(r => {
           const isEdit = !!editing[r.recurring_id]
@@ -421,6 +411,7 @@ export default function RecurringTab(): JSX.Element {
             <div key={r.recurring_id} className="transaction-card">
               {isEdit ? (
                 <>
+                  {/* EDIT MODE: Fields + Save/Delete */}
                   <label className="tv-field">
                     <span className="tv-label">Title</span>
                     <input
@@ -592,6 +583,7 @@ export default function RecurringTab(): JSX.Element {
                 </>
               ) : (
                 <>
+                  {/* EDIT MODE: Fields + Save/Delete */}
                   <p>
                     <strong>{capitalize((r as any).title || 'Untitled')}</strong> —{' '}
                     {new Date(r.start_date).toLocaleDateString()} —{' '}

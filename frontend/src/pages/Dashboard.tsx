@@ -16,9 +16,18 @@ function capitalize(str: string) {
 }
 
 export default function Dashboard() {
-  // ── Data fetching ────────────────────────────────
-  const { data: budgets = [], isLoading: bLoad, isError: bErr, error: bErrMsg } =
-    useQuery<BudgetRead[], Error>({ queryKey: ['budgets'], queryFn: fetchBudgets })
+  // ── Load budgets ───────────────────────────────────
+  const {
+    data: budgets = [],
+    isLoading: bLoad,
+    isError: bErr,
+    error: bErrMsg,
+  } = useQuery<BudgetRead[], Error>({
+    queryKey: ['budgets'],
+    queryFn: fetchBudgets,
+  })
+
+  // ── Load recent transactions ────────────────────────
   const {
     data: txPage = { items: [], total: 0, page: 1, page_size: 5 },
     isLoading: tLoad,
@@ -28,14 +37,30 @@ export default function Dashboard() {
     queryKey: ['transactions', { page: 1, page_size: 5 }],
     queryFn: () => fetchTransactions({ page: 1, page_size: 5 }),
   })
-  const { data: goals = [], isLoading: gLoad, isError: gErr, error: gErrMsg } =
-    useQuery<GoalRead[], Error>({ queryKey: ['goals'], queryFn: fetchGoals })
-  const { data: recs = [], isLoading: rLoad, isError: rErr, error: rErrMsg } =
-    useQuery<RecurringRead[], Error>({
-      queryKey: ['recurring'],
-      queryFn: fetchRecurring,
-    })
 
+  // ── Load goals ──────────────────────────────────────
+  const {
+    data: goals = [],
+    isLoading: gLoad,
+    isError: gErr,
+    error: gErrMsg,
+  } = useQuery<GoalRead[], Error>({
+    queryKey: ['goals'],
+    queryFn: fetchGoals,
+  })
+
+  // ── Load recurring ──────────────────────────────────
+  const {
+    data: recs = [],
+    isLoading: rLoad,
+    isError: rErr,
+    error: rErrMsg,
+  } = useQuery<RecurringRead[], Error>({
+    queryKey: ['recurring'],
+    queryFn: fetchRecurring,
+  })
+
+  // ── Show spinner or error ──────────────────────────
   if (bLoad || tLoad || gLoad || rLoad) return <Spinner />
   if (bErr || tErr || gErr || rErr)
     return (
@@ -44,41 +69,43 @@ export default function Dashboard() {
       </p>
     )
 
-  // ── Summary calculations ─────────────────────────
-  const totalIncome   = budgets.filter(b => b.section === 'income').reduce((s, b) => s + b.amount, 0)
-  const totalExpenses = budgets.filter(b => b.section !== 'income').reduce((s, b) => s + b.amount, 0)
-  const leftover      = totalIncome - totalExpenses
+  // ── Compute totals ──────────────────────────────────
+  const totalIncome = budgets
+    .filter(b => b.section === 'income')
+    .reduce((sum, b) => sum + b.amount, 0)
+  const totalExpenses = budgets
+    .filter(b => b.section !== 'income')
+    .reduce((sum, b) => sum + b.amount, 0)
+  const leftover = totalIncome - totalExpenses
 
-  // —— Budget groups ——  
-  const incomeB   = budgets.filter(b => b.section === 'income')
-  const fixedB    = budgets.filter(b => b.section === 'fixed')
+  // ── Group budgets ───────────────────────────────────
+  const incomeB = budgets.filter(b => b.section === 'income')
+  const fixedB = budgets.filter(b => b.section === 'fixed')
   const variableB = budgets.filter(b => b.section === 'variable')
 
+  // ── Render budget bars ──────────────────────────────
   const renderBars = (items: BudgetRead[], base: number) =>
     items.map(b => {
       const pct = Math.floor((b.amount / (base || 1)) * 100)
       return (
         <div key={b.budget_id} className="progress-item">
-          <strong>{capitalize(b.label || '')}</strong> — {pct}%
+          <strong>{capitalize(b.label)}</strong> — {pct}%
           <progress className="progress" value={pct} max={100} />
         </div>
       )
     })
 
-  // —— Next recurring ——  
+  // ── Upcoming recurring ──────────────────────────────
   const upcoming = recs
     .slice()
-    .sort(
-      (a, b) =>
-        new Date(a.next_run_date).getTime() - new Date(b.next_run_date).getTime()
-    )
-    .slice(0, 3)
+    .sort((a, b) => new Date(a.next_run_date).getTime() - new Date(b.next_run_date).getTime())
+    .slice(0, 5)
 
   return (
     <section className="dashboard-page">
       <h1>Dashboard</h1>
 
-      {/* Summary Cards */}
+      {/* ── Summary cards ─────────────────────────────── */}
       <div className="summary-cards">
         <div className="card">
           <strong>Total Income</strong>
@@ -94,7 +121,7 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Budget Overview */}
+      {/* ── Budget overview ────────────────────────────── */}
       <div className="card">
         <h2>Budget Overview</h2>
         <div className="overview-section">
@@ -111,7 +138,7 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Recent Transactions */}
+      {/* ── Recent transactions ───────────────────────── */}
       <div className="card">
         <h2>Recent Transactions</h2>
         <table className="transactions-table">
@@ -120,7 +147,7 @@ export default function Dashboard() {
               <th>Title</th>
               <th>Date</th>
               <th>Amt</th>
-              <th>Types of Transaction</th>
+              <th>Type</th>
             </tr>
           </thead>
           <tbody>
@@ -136,10 +163,9 @@ export default function Dashboard() {
         </table>
       </div>
 
-     {/* Upcoming Recurring  */}
+      {/* ── Upcoming recurring ─────────────────────────── */}
       <div className="card">
         <h2>Upcoming Recurring</h2>
-
         <table className="transactions-table recurring-table">
           <thead>
             <tr>
@@ -147,26 +173,22 @@ export default function Dashboard() {
               <th>Date</th>
               <th>Amt</th>
               <th>Freq</th>
-              <th>Types of Transaction</th>
+              <th>Type</th>
             </tr>
           </thead>
           <tbody>
-            {recs
-              .slice()                                   // copy
-              .sort((a, b) => new Date(a.next_run_date).getTime() - new Date(b.next_run_date).getTime())
-              .slice(0, 5)                               // show first 5
-              .map(r => (
-                <tr key={r.recurring_id}>
-                  <td>{capitalize((r as any).title || r.title || '—')}</td>
-                  <td>{new Date(r.next_run_date || r.start_date).toLocaleDateString()}</td>
-                  <td>${r.amount.toFixed(2)}</td>
-                  <td>{r.frequency.toUpperCase()}</td>
-                  <td>{r.direction.toUpperCase()}</td>
-                </tr>
-              ))}
-            {recs.length === 0 && (
+            {upcoming.map(r => (
+              <tr key={r.recurring_id}>
+                <td>{capitalize(r.title || '')}</td>
+                <td>{new Date(r.next_run_date).toLocaleDateString()}</td>
+                <td>${r.amount.toFixed(2)}</td>
+                <td>{r.frequency.toUpperCase()}</td>
+                <td>{r.direction.toUpperCase()}</td>
+              </tr>
+            ))}
+            {upcoming.length === 0 && (
               <tr>
-                <td colSpan={4} style={{ textAlign: 'center', padding: '12px 0' }}>
+                <td colSpan={5} style={{ textAlign: 'center', padding: '12px 0' }}>
                   No upcoming recurring transactions
                 </td>
               </tr>
@@ -175,7 +197,7 @@ export default function Dashboard() {
         </table>
       </div>
 
-      {/* Goals */}
+      {/* ── Goals progress ─────────────────────────────── */}
       <div className="card">
         <h2>Goals</h2>
         {goals.map(g => {

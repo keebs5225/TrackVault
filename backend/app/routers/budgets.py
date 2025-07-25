@@ -3,14 +3,16 @@ from typing import List
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlmodel.ext.asyncio.session import AsyncSession
 from sqlmodel import select
-
 from app.models import Budget
 from app.schemas.budget import BudgetCreate, BudgetRead, BudgetUpdate
 from app.core.security import get_current_user
 from app.db import get_session
 
+
+# ── Router setup ───────────────────────────────────────────
 router = APIRouter(tags=["budgets"])
 
+# ── Create a budget ───────────────────────────────────────
 @router.post("", response_model=BudgetRead, status_code=status.HTTP_201_CREATED)
 async def create_budget(
     budget_in: BudgetCreate,
@@ -23,6 +25,8 @@ async def create_budget(
     await session.refresh(b)
     return b
 
+
+# ── Get all budgets ───────────────────────────────────────
 @router.get("", response_model=List[BudgetRead])
 async def read_budgets(
     current=Depends(get_current_user),
@@ -33,6 +37,8 @@ async def read_budgets(
     )
     return result.all()
 
+
+# ── Update budget ───────────────────────────────────────
 @router.patch("/{budget_id}", response_model=BudgetRead)
 async def update_budget(
     budget_id: int,
@@ -49,6 +55,8 @@ async def update_budget(
     await session.refresh(b)
     return b
 
+
+# ── Delete budget ───────────────────────────────────────
 @router.delete("/{budget_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_budget(
     budget_id: int,

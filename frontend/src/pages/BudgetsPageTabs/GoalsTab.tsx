@@ -31,13 +31,13 @@ type SortKey =
 export default function GoalsTab(): JSX.Element {
   const qc = useQueryClient()
 
-  // ── Fetch goals ────────────────────────────────────────
+  /* ── Fetch goals ─────────────────────────────────────── */
   const { data: goals = [], isLoading, isError, error } = useQuery<GoalRead[], Error>({
     queryKey: ['goals'],
     queryFn: fetchGoals,
   })
 
-  // ── Mutations ──────────────────────────────────────────
+  /* ── Mutations ───────────────────────────────────────── */
   const createMut = useMutation<GoalRead, Error, GoalCreate>({
     mutationFn: createGoal,
     onSuccess: () => qc.invalidateQueries({ queryKey: ['goals'] }),
@@ -55,7 +55,7 @@ export default function GoalsTab(): JSX.Element {
     onSuccess: () => qc.invalidateQueries({ queryKey: ['goals'] }),
   })
 
-  // ── UI state ───────────────────────────────────────────
+  /* ── UI state ────────────────────────────────────────── */
   const [showForm, setShowForm] = useState(false)
   const [title, setTitle]       = useState('')
   const [desc, setDesc]         = useState('')
@@ -103,11 +103,13 @@ export default function GoalsTab(): JSX.Element {
     title_za: (a, b) => b.title.localeCompare(a.title),
   }
 
+  /* ── Apply sorting ────────────────────────────────────── */
   const sortedGoals = useMemo(
     () => [...goals].sort(SORTS[sortBy]),
     [goals, sortBy]
   )
 
+  /* ── Add goal handler ────────────────────────────────── */
   function handleAdd(e: FormEvent) {
     e.preventDefault()
     if (!title || !target || !byDate) return
@@ -121,7 +123,7 @@ export default function GoalsTab(): JSX.Element {
     setTitle(''); setDesc(''); setTarget(''); setByDate(''); setPriority('med')
     setShowForm(false)
   }
-
+  /* ── Priority bump handler ───────────────────────────── */
   const handlePriorityBump = (id: number, current: Priority, dir: 'up' | 'down') => {
     const next = dir === 'up' ? incPriority(current) : decPriority(current)
     if (next === current) return
@@ -243,6 +245,7 @@ export default function GoalsTab(): JSX.Element {
           </>
         ) : (
           <>
+            {/* Display mode */}
             <h2>
               {g.title}{' '}
               <span className={`priority-badge ${g.priority}`}>
@@ -340,7 +343,7 @@ export default function GoalsTab(): JSX.Element {
       </div>
     )
   }
-
+  /* ── Render page ───────────────────────────────────────── */
   return (
     <section className="goals-page">
       <h1>Goals</h1>

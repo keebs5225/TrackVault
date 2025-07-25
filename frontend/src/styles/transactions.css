@@ -1,6 +1,6 @@
 /* frontend/src/styles/transactions.css */
 
-/* Page wrapper */
+/* ── Page wrapper ───────────────────────────────────── */
 .transactions-page {
   max-width: 900px;
   margin: var(--space-lg) auto;
@@ -13,17 +13,18 @@
   margin-bottom: var(--space-lg);
 }
 
+/* ── Summary spacing ────────────────────────────────── */
 .transactions-page .summary {
   margin: var(--space-sm) 0 var(--space-md);
 }
 
-/* Grid of transactions */
+/* ── Transactions grid ─────────────────────────────── */
 .transactions-grid {
   display: grid;
   gap: var(--space-md);
 }
 
-/* Individual transaction card */
+/* ── Transaction card ──────────────────────────────── */
 .transaction-card {
   background: var(--color-muted-bg);
   border-radius: var(--radius-md);

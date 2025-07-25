@@ -1,4 +1,4 @@
-// src/pages/CalculatorsTab.tsx
+// frontend/src/pages/CalculatorsTab.tsx
 import React, { useState, useMemo } from 'react'
 import '../../styles/global.css'
 import '../../styles/calculators.css'
@@ -11,10 +11,12 @@ const copy = async (text: string) => {
 }
 
 export default function CalculatorsTab() {
-  /* ------------ Loan ------------- */
+  // ── Loan calculator state ───────────────────────────────
   const [loanAmt, setLoanAmt]   = useState('')
   const [loanRate, setLoanRate] = useState('')
   const [loanTerm, setLoanTerm] = useState('')
+
+  // ── Compute loan payment ──────────────────────────────────
   const loanPayment = useMemo(() => {
     const P = parseFloat(loanAmt)
     const r = parseFloat(loanRate) / 100 / 12
@@ -24,11 +26,13 @@ export default function CalculatorsTab() {
   }, [loanAmt, loanRate, loanTerm])
   const loanText = loanPayment ? `Monthly Payment: $${loanPayment}` : ''
 
-  /* ------------ Savings ----------- */
+  // ── Savings calculator state ────────────────────────────
   const [saveInit, setSaveInit]       = useState('')
   const [saveRate, setSaveRate]       = useState('')
   const [saveTerm, setSaveTerm]       = useState('')
   const [saveMonthly, setSaveMonthly] = useState('')
+
+  // ── Compute savings future value ────────────────────────
   const saveFuture = useMemo(() => {
     const P = parseFloat(saveInit)
     const r = parseFloat(saveRate) / 100 / 12
@@ -39,11 +43,13 @@ export default function CalculatorsTab() {
   }, [saveInit, saveRate, saveTerm, saveMonthly])
   const savingsText = saveFuture ? `Future Value: $${saveFuture}` : ''
 
-  /* ------------ Investment -------- */
+  // ── Investment calculator state ─────────────────────────
   const [invInit, setInvInit] = useState('')
   const [invRate, setInvRate] = useState('')
   const [invTerm, setInvTerm] = useState('')
   const [invCont, setInvCont] = useState('')
+
+  // ── Compute investment future value ─────────────────────
   const invFuture = useMemo(() => {
     const P = parseFloat(invInit)
     const r = parseFloat(invRate) / 100
@@ -54,13 +60,14 @@ export default function CalculatorsTab() {
   }, [invInit, invRate, invTerm, invCont])
   const invText = invFuture ? `Projected Value: $${invFuture}` : ''
 
-  /* ------------ Pay / Salary ------ */
+  // ── Pay/Salary calculator state ─────────────────────────
   const [payMode, setPayMode] = useState<'hourly' | 'salary'>('hourly')
   const [hourlyRate, setHourlyRate]   = useState('')
   const [hoursWeek,  setHoursWeek]    = useState('40')
   const [weeksYear,  setWeeksYear]    = useState('52')
   const [annualSalary, setAnnualSalary] = useState('')
 
+  // ── Compute pay breakdown ───────────────────────────────
   const payResult = useMemo(() => {
     const hw = parseFloat(hoursWeek) || 0
     const wy = parseFloat(weeksYear) || 0
@@ -99,7 +106,7 @@ Monthly: $${money(payResult.monthly)}
 Annual: $${money(payResult.annual)}`
     : ''
 
-  /* ------------ Resets ------------ */
+  // ── Reset functions ─────────────────────────────────────
   const resetLoan = () => { setLoanAmt(''); setLoanRate(''); setLoanTerm('') }
   const resetSave = () => { setSaveInit(''); setSaveRate(''); setSaveTerm(''); setSaveMonthly('') }
   const resetInv  = () => { setInvInit(''); setInvRate(''); setInvTerm(''); setInvCont('') }
@@ -113,7 +120,7 @@ Annual: $${money(payResult.annual)}`
       <h1>Calculators</h1>
 
       <div className="calculators-grid">
-        {/* Loan */}
+        {/* ── Loan calculator UI ───────────────────────── */}
         <div className="calculator-card">
           <fieldset className="calculators-fieldset">
             <legend>Loan Payment</legend>
@@ -143,7 +150,7 @@ Annual: $${money(payResult.annual)}`
           </div>
         </div>
 
-        {/* Savings */}
+        {/* ── Savings calculator UI ───────────────────────── */}
         <div className="calculator-card">
           <fieldset className="calculators-fieldset">
             <legend>Savings Growth</legend>
@@ -176,7 +183,7 @@ Annual: $${money(payResult.annual)}`
           </div>
         </div>
 
-        {/* Investment */}
+        {/* ── Investment calculator UI ─────────────────────── */}
         <div className="calculator-card">
           <fieldset className="calculators-fieldset">
             <legend>Investment Projection</legend>
@@ -209,7 +216,7 @@ Annual: $${money(payResult.annual)}`
           </div>
         </div>
 
-        {/* Pay / Salary */}
+        {/* ── Pay/Salary calculator UI ───────────────────────── */}
         <div className="calculator-card">
           <fieldset className="calculators-fieldset pay-calc">
             <legend>Pay / Salary</legend>

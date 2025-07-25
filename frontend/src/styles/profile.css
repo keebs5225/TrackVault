@@ -1,6 +1,6 @@
 /* frontend/src/styles/profile.css */
 
-/* Wrapper */
+/* ── Page container ─────────────────────────────────── */
 .profile-page {
   max-width: 600px;
   margin: var(--space-lg) auto;
@@ -9,6 +9,8 @@
   box-shadow: var(--shadow-md);
   padding: var(--space-lg);
 }
+
+/* ── Page title ─────────────────────────────────────── */
 .profile-page h1 {
   font-size: var(--font-heading);
   color: var(--color-primary);
@@ -16,7 +18,7 @@
   margin-bottom: var(--space-lg);
 }
 
-/* Details grid (read view) */
+/* ── Details grid (read-only) ───────────────────────── */
 .profile-details {
   display: grid;
   grid-template-columns: auto 1fr;
@@ -32,19 +34,21 @@
   color: var(--color-text);
 }
 
-/* Edit form */
+/* ── Edit form container ───────────────────────────── */
 .profile-form {
-  background: none; 
+  background: none;
   display: flex;
   flex-direction: column;
   gap: var(--space-md);
 }
+
+/* ── Error message ──────────────────────────────────── */
 .profile-error {
   color: var(--color-danger);
   margin-bottom: var(--space-sm);
 }
 
-/* Password eye toggle */
+/* ── Password toggle wrapper ────────────────────────── */
 .password-wrapper {
   position: relative;
   display: flex;
@@ -52,11 +56,13 @@
 }
 .password-wrapper input {
   flex: 1;
-  padding-right: 2.5rem; 
+  padding-right: 2.5rem; /* room for eye icon */
 }
+
+/* ── Toggle eye button ─────────────────────────────── */
 .toggle-eye {
   position: absolute;
-  right: .5rem;
+  right: 0.5rem;
   top: 50%;
   transform: translateY(-50%);
   background: none;
@@ -68,19 +74,19 @@
   align-items: center;
 }
 
-/* Action buttons row */
+/* ── Action buttons row ────────────────────────────── */
 .profile-actions {
   display: flex;
   justify-content: center;
   gap: var(--space-md);
 }
 
-/* Dark mode tweaks overides global dark styles */
+/* ── Dark mode override ─────────────────────────────── */
 body.dark .profile-page {
   background: #1e1e1e;
   color: #e0e0e0;
   box-shadow: none;
 }
-body.dark .profile-form { background: none; }
-
-
+body.dark .profile-form {
+  background: none;
+}

@@ -9,10 +9,9 @@ import '../../styles/budgets.css'
 
 type SectionKey = 'income' | 'fixed' | 'variable'
 
-/* utils */
-const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1)
 
-/* sort keys */
+// ── Helpers & types ───────────────────────────────────────
+const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1)
 type SortKey =
   | 'amount_desc'
   | 'amount_asc'
@@ -21,6 +20,7 @@ type SortKey =
   | 'income_first'
   | 'fixed_first'
   | 'variable_first'
+
 
 export default function BudgetsTab(): JSX.Element {
   const qc = useQueryClient()
@@ -52,13 +52,11 @@ export default function BudgetsTab(): JSX.Element {
   const [newAmount, setNewAmount] = useState('')
 
   const [editing, setEditing] = useState<Record<number, boolean>>({})
-  const [editForm, setEditForm] = useState<
-    Record<number, { section: SectionKey; label: string; amount: number }>
-  >({})
+  const [editForm, setEditForm] = useState<Record<number, { section: SectionKey; label: string; amount: number }>>({})
 
   const [sortBy, setSortBy] = useState<SortKey>('amount_desc')
 
-  /* ── All hooks (useMemo) BEFORE any early returns ───── */
+  /* ── Sort & group data ──────────────────────────────── */
   const sectionOrder: SectionKey[] = useMemo(() => {
     switch (sortBy) {
       case 'income_first':   return ['income', 'fixed', 'variable']
@@ -93,7 +91,7 @@ export default function BudgetsTab(): JSX.Element {
     return { income, expenses, leftover: income - expenses }
   }, [budgets])
 
-  /* ── Early returns (no hooks after this point) ──────── */
+  /* ── Early returns ───────────────────────────────────── */
   if (isLoading) return <Spinner />
   if (isError)   return <p className="error-message">{error.message}</p>
 
@@ -116,6 +114,7 @@ export default function BudgetsTab(): JSX.Element {
       <div key={item.budget_id} className={`budget-card ${isEdit ? 'is-editing' : ''}`}>
         {isEdit ? (
           <>
+            {/* ── Edit form fields ───────────────────────── */}
             <label className="tv-field">
               <span className="tv-label">Section</span>
               <select
@@ -199,9 +198,9 @@ export default function BudgetsTab(): JSX.Element {
           </>
         ) : (
           <>
+            {/* ── Display  ───────────────────────────── */}
             <h2>{capitalize(item.label)}</h2>
             <p>${item.amount.toFixed(2)}</p>
-
             <div className="tv-actions">
               <button
                 className="btn btn-primary"
@@ -219,6 +218,7 @@ export default function BudgetsTab(): JSX.Element {
     )
   }
 
+  /* ── Render page ──────────────────────────────────────── */
   return (
     <section className="budgets-page">
       <h1>Budgets</h1>
@@ -231,7 +231,7 @@ export default function BudgetsTab(): JSX.Element {
           {showForm ? 'Close Form' : '+ Add Budget'}
         </button>
 
-        {/* Sort dropdown */}
+        {/* ── Sort dropdown ─────────────────────────────── */}
         <select
           className="tv-select sort-select"
           value={sortBy}
@@ -242,12 +242,10 @@ export default function BudgetsTab(): JSX.Element {
             <option value="fixed_first">Fixed</option>
             <option value="variable_first">Variable</option>
           </optgroup>
-
           <optgroup label="Title">
             <option value="label_az">Title (A→Z)</option>
             <option value="label_za">Title (Z→A)</option>
           </optgroup>
-
           <optgroup label="Amount">
             <option value="amount_desc">Amount (Highest)</option>
             <option value="amount_asc">Amount (Lowest)</option>
@@ -257,6 +255,7 @@ export default function BudgetsTab(): JSX.Element {
 
       {showForm && (
         <form onSubmit={handleAdd} className="card tv-form-card tv-form">
+          {/* ── Add budget form ─────────────────────────── */}
           <label className="tv-field">
             <span className="tv-label">Section</span>
             <select
@@ -306,7 +305,7 @@ export default function BudgetsTab(): JSX.Element {
         </form>
       )}
 
-      {/* Sections in chosen order */}
+      {/* ── Budget sections ────────────────────────────────── */}
       <div className="budgets-grid">
         {sectionOrder.map(sec => (
           <div key={sec}>
@@ -322,11 +321,12 @@ export default function BudgetsTab(): JSX.Element {
         ))}
       </div>
 
+      {/* ── Summary block ─────────────────────────────────── */}
       <div className="summary-block">
         <h2>Summary</h2>
         <p><strong>Total Income:</strong> ${totals.income.toFixed(2)}</p>
         <p><strong>Total Expenses:</strong> ${totals.expenses.toFixed(2)}</p>
-        <p>{'-------------------------------------------'}</p>
+        <p>-------------------------------------------</p>
         <p><strong>Leftover:</strong> ${totals.leftover.toFixed(2)}</p>
       </div>
     </section>

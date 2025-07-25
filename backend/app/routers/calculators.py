@@ -3,9 +3,11 @@ from fastapi import APIRouter
 from pydantic import BaseModel, Field
 import math
 
-router = APIRouter(prefix="/calculators", tags=["calculators"])
 
-# — Loan calculator —  
+# ── Router setup ───────────────────────────────────────────
+router = APIRouter( tags=["calculators"])
+
+# ── Loan calculator models ───────────────────────────────
 class LoanParams(BaseModel):
     principal:    float = Field(..., gt=0)
     annual_rate:  float = Field(..., gt=0, lt=100, description="Percent")
@@ -16,6 +18,8 @@ class LoanResult(BaseModel):
     total_payment:   float
     total_interest:  float
 
+
+# ── Calculate loan payments ──────────────────────────────
 @router.post("/loan", response_model=LoanResult)
 def calculate_loan(p: LoanParams):
     r = p.annual_rate/100/12
@@ -28,7 +32,8 @@ def calculate_loan(p: LoanParams):
         total_interest=round(total - p.principal,2),
     )
 
-# — Savings calculator —  
+
+# ── Savings calculator models ────────────────────────────
 class SavingsParams(BaseModel):
     initial:         float = Field(..., ge=0)
     monthly_deposit: float = Field(..., ge=0)
@@ -40,6 +45,8 @@ class SavingsResult(BaseModel):
     contributions:    float
     interest_earned:  float
 
+
+# ── Calculate savings growth ─────────────────────────────
 @router.post("/savings", response_model=SavingsResult)
 def calculate_savings(p: SavingsParams):
     r = p.annual_rate/100/12
@@ -55,7 +62,8 @@ def calculate_savings(p: SavingsParams):
         interest_earned=round(interest,2),
     )
 
-# — Simple investment —  
+
+# ── Investment calculator models ─────────────────────────
 class InvestmentParams(BaseModel):
     principal:   float = Field(..., gt=0)
     annual_rate: float = Field(..., gt=0, lt=100)
@@ -65,6 +73,8 @@ class InvestmentResult(BaseModel):
     future_value:   float
     total_interest: float
 
+
+# ── Calculate investment return ──────────────────────────
 @router.post("/investment", response_model=InvestmentResult)
 def calculate_investment(p: InvestmentParams):
     r = p.annual_rate/100

@@ -1,12 +1,8 @@
 // frontend/src/services/transactions.ts
 import API from './api'
-import type {
-  TransactionRead,
-  TransactionCreate,
-  TransactionUpdate,
-  Paged,
-} from '../types'
+import type { TransactionRead, TransactionCreate, TransactionUpdate, Paged } from '../types'
 
+/* ── Fetch paginated transactions ─────────────────────── */
 export function fetchTransactions(params: {
   page: number
   page_size: number
@@ -19,6 +15,7 @@ export function fetchTransactions(params: {
   )
 }
 
+/* ── Create transaction ────────────────────────── */
 export function createTransaction(
   data: TransactionCreate
 ): Promise<TransactionRead> {
@@ -27,6 +24,7 @@ export function createTransaction(
   )
 }
 
+/* ── Update transaction ──────────────────── */
 export function updateTransaction(
   id: number,
   data: TransactionUpdate
@@ -36,6 +34,7 @@ export function updateTransaction(
   )
 }
 
+/* ── Delete transaction ────────────────────────────── */
 export function deleteTransaction(id: number): Promise<void> {
   return API.delete<void>(`/transactions/${id}/`).then(() => {})
 }

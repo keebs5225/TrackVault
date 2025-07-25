@@ -5,9 +5,8 @@ import type { AxiosResponse } from 'axios'
 import API from '../services/api'
 import { useNavigate } from 'react-router-dom'
 import Spinner from '../components/Spinner'
-import '../styles/global.css';
-import '../styles/signup.css';
-
+import '../styles/global.css'
+import '../styles/signup.css'
 
 interface SignupForm {
   name: string
@@ -17,31 +16,42 @@ interface SignupForm {
 
 export default function Signup() {
   const navigate = useNavigate()
-  const [form, setForm] = useState<SignupForm>({ name: '', email: '', password: '' })
 
+  /* ── Form state ───────────────────────────────────── */
+  const [form, setForm] = useState<SignupForm>({
+    name: '',
+    email: '',
+    password: '',
+  })
+
+  /* ── Signup mutation ───────────────────────────────── */
   const signupMutation = useMutation<AxiosResponse<any>, any, SignupForm>({
     mutationFn: newUser => API.post('/auth/signup', newUser),
     onSuccess: () => navigate('/login'),
-    onError: (err: any) => {
+    onError: err => {
       if (err.response?.status === 400) {
         // Email already registered
-        navigate('/login', { state: { flash: 'Already have an account under this email.' } })
+        navigate('/login', {
+          state: { flash: 'Already have an account under this email.' },
+        })
       } else {
         alert(err.response?.data || 'Signup failed')
       }
     },
   })
-
   const { mutate, status } = signupMutation
 
+  /* ── Handle input changes ──────────────────────────── */
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) =>
     setForm({ ...form, [e.target.name]: e.target.value })
 
+  /* ── Handle form submit ────────────────────────────── */
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     mutate(form)
   }
 
+  /* ── Signup form UI ────────────────────────────────── */
   return (
     <form onSubmit={handleSubmit} className="signup-form">
       <h2>Sign Up</h2>

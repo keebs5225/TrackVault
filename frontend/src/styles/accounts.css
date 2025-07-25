@@ -1,11 +1,11 @@
-/* frontend/src/styles/accounts.css */
-
+/* ── Page container ─────────────────────────────────── */
 .accounts-page {
   max-width: 1000px;
   margin: var(--space-lg) auto;
   padding: 0 var(--space-md) var(--space-lg);
 }
 
+/* ── Page heading ───────────────────────────────────── */
 .accounts-page h1 {
   font-size: var(--font-heading);
   color: var(--color-primary);
@@ -13,10 +13,12 @@
   margin-bottom: var(--space-lg);
 }
 
+/* ── Summary text ───────────────────────────────────── */
 .accounts-page .summary {
   margin: var(--space-sm) 0 var(--space-md);
 }
 
+/* ── Accounts grid ─────────────────────────────────── */
 .accounts-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
@@ -25,6 +27,7 @@
   align-items: start;
 }
 
+/* ── Account card ───────────────────────────────────── */
 .account-card {
   background: var(--color-muted-bg);
   border-radius: var(--radius-md);
@@ -36,18 +39,20 @@
   transition: box-shadow .2s, transform .2s;
 }
 
+/* ── Card hover effect ─────────────────────────────── */
 .account-card:hover {
   box-shadow: var(--shadow-md);
   transform: translateY(-2px);
 }
 
+/* ── Card title ────────────────────────────────────── */
 .account-card h2 {
   margin: 0 0 var(--space-sm);
   font-size: 1.125rem;
   color: var(--color-text);
 }
 
-
+/* ── Editing span adjustment ───────────────────────── */
 .account-card.is-editing {
   grid-column: span 1;
 }
@@ -58,23 +63,22 @@
   }
 }
 
-/* Keep footer buttons inline while editing */
+/* ── Keep footer buttons inline when editing ───────── */
 .account-card.is-editing .tv-actions--split {
   flex-wrap: nowrap;
 }
-
 .account-card.is-editing .tv-actions--split .left,
 .account-card.is-editing .tv-actions--split .right {
   flex-wrap: nowrap;
 }
 
+/* ── Footer actions layout ─────────────────────────── */
 .account-actions {
   margin-top: auto;
   display: flex;
   gap: var(--space-sm);
   flex-wrap: wrap;
 }
-
 .account-actions .left,
 .account-actions .right {
   flex-wrap: wrap;

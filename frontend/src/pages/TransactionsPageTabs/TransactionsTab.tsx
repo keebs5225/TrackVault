@@ -3,19 +3,8 @@ import React, { useState, FormEvent, useMemo } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import Spinner from '../../components/Spinner'
 import { fetchAccounts } from '../../services/accounts'
-import {
-  fetchTransactions,
-  createTransaction,
-  updateTransaction,
-  deleteTransaction,
-} from '../../services/transactions'
-import type {
-  TransactionRead,
-  TransactionCreate,
-  TransactionUpdate,
-  AccountRead,
-  Paged,
-} from '../../types'
+import { fetchTransactions, createTransaction, updateTransaction, deleteTransaction } from '../../services/transactions'
+import type { TransactionRead, TransactionCreate, TransactionUpdate, AccountRead, Paged } from '../../types'
 import '../../styles/global.css'
 import '../../styles/transactions.css'
 
@@ -25,7 +14,7 @@ function capitalize(str: string) {
 
 const pageSize = 100
 
-/* ---------- sorting ------------ */
+// ── Sort key types ──────────────────────────────────
 type BaseSortKey =
   | 'date_desc'
   | 'date_asc'
@@ -37,20 +26,20 @@ type BaseSortKey =
   | 'deposit_first'
   | 'withdraw_first'
 
-type SortKey = BaseSortKey | `acc_${number}` // dynamic “account first” keys
+type SortKey = BaseSortKey | `acc_${number}`
 
 export default function TransactionsTab(): JSX.Element {
   const qc = useQueryClient()
-
+  // ── Today’s date ISO ───────────────────────────────
   const todayISO = useMemo(() => new Date().toISOString().split('T')[0], [])
 
-  /* Lookups */
+  // ── Lookups ────────────────────────────────────────
   const { data: accounts = [] } = useQuery<AccountRead[], Error>({
     queryKey: ['accounts'],
     queryFn: fetchAccounts,
   })
 
-  /* Fetch transactions */
+  // ── Fetch transactions ─────────────────────────────
   const {
     data: txs = {
       items: [],
@@ -66,7 +55,7 @@ export default function TransactionsTab(): JSX.Element {
     queryFn: () => fetchTransactions({ page: 1, page_size: pageSize }),
   })
 
-  /* Mutations */
+  // ── Mutations ──────────────────────────────────────
   const createMut = useMutation<TransactionRead, Error, TransactionCreate>({
     mutationFn: createTransaction,
     onSuccess: () => {
@@ -95,7 +84,7 @@ export default function TransactionsTab(): JSX.Element {
     },
   })
 
-  /* UI state */
+  // ── UI state ───────────────────────────────────────
   const [showForm, setShowForm] = useState(false)
 
   // create form
@@ -112,14 +101,14 @@ export default function TransactionsTab(): JSX.Element {
 
   // sort state
   const [sortBy, setSortBy] = useState<SortKey>('date_desc')
-
+  // ── Utilities ──────────────────────────────────────
   const acctName = (id: number) =>
     accounts.find(a => a.account_id === id)?.name ?? '—'
 
-  /* Sort functions */
+  // ── Default tiebreak for sorts ─────────────────────
   const defaultTieBreak = (a: TransactionRead, b: TransactionRead) =>
-    new Date(b.date).getTime() - new Date(a.date).getTime() // newest first as secondary criteria
-
+    new Date(b.date).getTime() - new Date(a.date).getTime()
+  // ── Sort functions ─────────────────────────────────
   const SORTS: Record<SortKey, (a: TransactionRead, b: TransactionRead) => number> =
     useMemo(() => {
       const base: Record<BaseSortKey, (a: TransactionRead, b: TransactionRead) => number> = {
@@ -156,12 +145,12 @@ export default function TransactionsTab(): JSX.Element {
 
       return { ...base, ...Object.fromEntries(accSortsEntries) }
     }, [accounts])
-
+  // ── Derived lists ──────────────────────────────────
   const sortedTxs = useMemo(
     () => [...txs.items].sort(SORTS[sortBy]),
     [txs.items, SORTS, sortBy]
   )
-
+  // ── Handlers ───────────────────────────────────────
   function handleAdd(e: FormEvent) {
     e.preventDefault()
     if (!title || !date || !acct || !amount) return
@@ -192,14 +181,14 @@ export default function TransactionsTab(): JSX.Element {
     )
   }
 
-  /* Summary */
+  // ── Summary ────────────────────────────────────────
   const showing = txs.items.length
   const total = txs.total
-
+  // ── Render ─────────────────────────────────────────
   return (
     <section className="transactions-page">
       <h1>Transactions</h1>
-
+      {/* Header: add & sort */}
       <div className="header-row">
         <button
           className={`btn ${showForm ? 'btn-secondary' : 'btn-primary'}`}
@@ -208,7 +197,6 @@ export default function TransactionsTab(): JSX.Element {
           {showForm ? 'Close Form' : '+ New Transaction'}
         </button>
 
-        {/* Sort dropdown with optgroups */}
         <select
           className="tv-select sort-select"
           value={sortBy}
@@ -244,7 +232,7 @@ export default function TransactionsTab(): JSX.Element {
         Showing {showing} of {total}
       </p>
 
-      {/* Add form */}
+      {/* Add Transaction Form */}
       {showForm && (
         <form onSubmit={handleAdd} className="card tv-form-card tv-form">
           <label className="tv-field">
@@ -333,7 +321,7 @@ export default function TransactionsTab(): JSX.Element {
         </form>
       )}
 
-      {/* List */}
+      {/* Transactions List */}
       <div className="transactions-grid">
         {sortedTxs.map(tx => {
           const isEdit = !!editing[tx.transaction_id]
@@ -452,7 +440,7 @@ export default function TransactionsTab(): JSX.Element {
                       <option value="withdrawal">Withdrawal</option>
                     </select>
                   </label>
-
+                  {/* Edit Mode Actions */}
                   <div className="tv-actions--split">
                     <div className="left">
                       <button
@@ -488,6 +476,7 @@ export default function TransactionsTab(): JSX.Element {
                 </>
               ) : (
                 <>
+                  {/* Read-only view */}                
                   <p>
                     <b>{capitalize(tx.title)}</b> —{' '}
                     {new Date(tx.date).toLocaleDateString()} —{' '}

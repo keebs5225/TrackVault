@@ -3,7 +3,7 @@ import React from 'react';
 import { NavLink } from 'react-router-dom';
 import '../styles/global.css'
 
-
+// ── Sidebar links ───────────────────────────────────
 const items = [
   { to: '/dashboard', label: 'DashBoard', icon: '🏠' },
   { to: '/profile',   label: 'Profile',   icon: '👤' },
@@ -13,9 +13,11 @@ const items = [
 ];
 
 export default function Sidebar() {
+  // ── Sidebar container ───────────────────────────────────
   return (
     <nav className="sidebar">
       <ul className="sidebar-list">
+        {/* ── Navigation links ─────────────────────────────── */}
         {items.map(item => (
           <li key={item.to} className="sidebar-list-item">
             <NavLink
@@ -24,6 +26,7 @@ export default function Sidebar() {
                 `nav-link${isActive ? ' active' : ''}`
               }
             >
+              {/* ── Icon + label ───────────────────────────── */}
               <span className="nav-icon">{item.icon}</span>
               {item.label}
             </NavLink>
@@ -31,5 +34,5 @@ export default function Sidebar() {
         ))}
       </ul>
     </nav>
-  );
+  )
 }

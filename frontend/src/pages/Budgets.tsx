@@ -8,11 +8,13 @@ import '../styles/global.css'
 type Tab = 'budgets' | 'calculators' | 'goals'
 
 export default function BudgetsPage() {
+  // ── Selected tab state ──────────────────────────  
   const [tab, setTab] = useState<Tab>('budgets')
   const tabs: Tab[] = ['budgets', 'calculators', 'goals']
 
   return (
     <section className="page-with-tabs">
+      {/* ── Tab navigation ─────────────────────────── */}
       <nav className="tabs-container" role="tablist" aria-label="Budgets navigation">
         {tabs.map(t => {
           const active = tab === t
@@ -29,7 +31,7 @@ export default function BudgetsPage() {
           )
         })}
       </nav>
-
+      {/* ── Tab content ────────────────────────────── */}
       {tab === 'budgets'     && <BudgetsTab />}
       {tab === 'calculators' && <CalculatorsTab />}
       {tab === 'goals'       && <GoalsTab />}

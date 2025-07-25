@@ -1,5 +1,4 @@
 # backend/app/main.py
-
 from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordBearer
@@ -7,20 +6,20 @@ from sqlmodel import SQLModel, select
 from sqlmodel.ext.asyncio.session import AsyncSession
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from datetime import datetime, timedelta
-
 from app.db import engine, get_session
 from app.models import RecurringTransaction, Transaction
 
-# routers
+# ── Routers ─────────────────────────────────────────────
 from app.routers import auth, users, accounts, transactions
 from app.routers.budgets   import router as budgets_router
 from app.routers.recurring import router as recurring_router
 from app.routers.goals     import router as goals_router
 from app.routers.calculators import router as calculators_router
 
+# ── App setup ─────────────────────────────────────────────
 app = FastAPI(title="TrackVault API")
 
-# CORS
+# ── CORS middleware ───────────────────────────────────────
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:5173"],
@@ -29,6 +28,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# ── Startup: create tables & schedule recurring ──────
 @app.on_event("startup")
 async def on_startup():
     async with engine.begin() as conn:
@@ -37,21 +37,23 @@ async def on_startup():
     sched.add_job(run_recurring, trigger="cron", hour=0, minute=0)
     sched.start()
 
-# include routers
-app.include_router(auth,           prefix="/auth",        tags=["auth"])
-app.include_router(users,          prefix="/users",       tags=["users"])
-app.include_router(accounts,       prefix="/accounts",    tags=["accounts"])
-app.include_router(transactions,   prefix="/transactions",tags=["transactions"])
-app.include_router(budgets_router, prefix="/budgets",     tags=["budgets"])
-app.include_router(recurring_router, prefix="/recurring", tags=["recurring"])
-app.include_router(goals_router,   prefix="/goals",       tags=["goals"])
+# ── Routers ───────────────────────────────────────
+app.include_router(auth,             prefix="/auth",        tags=["auth"])
+app.include_router(users,            prefix="/users",       tags=["users"])
+app.include_router(accounts,         prefix="/accounts",    tags=["accounts"])
+app.include_router(transactions,     prefix="/transactions",tags=["transactions"])
+app.include_router(budgets_router,   prefix="/budgets",     tags=["budgets"])
+app.include_router(recurring_router, prefix="/recurring",   tags=["recurring"])
+app.include_router(goals_router,     prefix="/goals",       tags=["goals"])
 app.include_router(calculators_router, prefix="/calculators", tags=["calculators"])
 
+# ── Health checkpoint ─────────────────────────────────
 @app.get("/health")
 async def health(session: AsyncSession = Depends(get_session)):
     ok = await session.scalar(select(1))
     return {"status": "ok", "db": ok}
 
+# ── Process due recurring transactions ────────────────
 async def run_recurring():
     async with get_session() as session:
         now = datetime.utcnow()
@@ -71,7 +73,7 @@ async def run_recurring():
             )
             session.add(tx)
 
-            # bump
+            # ── Bump next_run_date ──────────────────────────
             if rec.frequency == "daily":
                 rec.next_run_date += timedelta(days=1)
             elif rec.frequency == "weekly":

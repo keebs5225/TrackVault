@@ -3,14 +3,16 @@ from typing import List
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlmodel.ext.asyncio.session import AsyncSession
 from sqlmodel import select
-
 from app.models import RecurringTransaction
 from app.schemas.recurring import RecurringCreate, RecurringRead, RecurringUpdate
 from app.core.security import get_current_user
 from app.db import get_session
 
+
+# ── Router setup ───────────────────────────────────────────
 router = APIRouter(tags=["recurring"])
 
+# ── Create recurring transaction ─────────────────────────
 @router.post("", response_model=RecurringRead, status_code=status.HTTP_201_CREATED)
 async def create_recurring(
     rec_in: RecurringCreate,
@@ -23,6 +25,8 @@ async def create_recurring(
     await session.refresh(r)
     return r
 
+
+# ── Get all recurring transactions ────────────────────────
 @router.get("", response_model=List[RecurringRead])
 async def read_recurrings(
     current=Depends(get_current_user),
@@ -33,6 +37,8 @@ async def read_recurrings(
     )
     return result.all()
 
+
+# ── Update recurring transaction ────────────────────────
 @router.patch("/{rec_id}", response_model=RecurringRead)
 async def update_recurring(
     rec_id: int,
@@ -49,6 +55,8 @@ async def update_recurring(
     await session.refresh(r)
     return r
 
+
+# ── Delete recurring transaction ────────────────────────
 @router.delete("/{rec_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_recurring(
     rec_id: int,

@@ -1,6 +1,6 @@
 /* frontend/src/styles/login.css */
 
-/* Centered auth form */
+/* ── Center auth form container ─────────────────────── */
 .profile-form {
   max-width: 400px;
   margin: var(--space-lg) auto;
@@ -13,18 +13,21 @@
   gap: var(--space-md);
 }
 
+/* ── Form heading ───────────────────────────────────── */
 .profile-form h2 {
   margin: 0 0 var(--space-md);
   text-align: center;
   color: var(--color-primary);
 }
 
+/* ── Field labels ───────────────────────────────────── */
 .profile-form label {
   display: block;
   color: var(--color-secondary);
   margin-bottom: var(--space-sm);
 }
 
+/* ── Text inputs ────────────────────────────────────── */
 .profile-form input {
   width: 100%;
   padding: var(--space-sm);
@@ -33,16 +36,17 @@
   margin-top: var(--space-xs);
 }
 
+/* ── Submit button alignment ────────────────────────── */
 .profile-form button {
   align-self: center;
 }
 
-/* tweak spacing */
+/* ── Flash message spacing ──────────────────────────── */
 .flash-message {
   margin-bottom: var(--space-md);
 }
 
-/* Dark mode tweaks overides global dark styles */
+/* ── Dark mode overrides ────────────────────────────── */
 body.dark .profile-form {
   background: #1e1e1e;
   color: #e0e0e0;

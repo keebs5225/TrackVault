@@ -1,6 +1,6 @@
 /* frontend/src/styles/splash.css */
 
-/* Full-screen hero */
+/* ── Full-screen hero ───────────────────────────────── */
 .splash-page {
   position: relative;
   min-height: 100vh;
@@ -11,7 +11,7 @@
   padding: 0 var(--space-md);
 }
 
-/* Primary CTA */
+/* ── Primary CTA button ─────────────────────────────── */
 .splash-page > div > a {
   display: inline-block;
   margin-top: 1rem;
@@ -27,7 +27,7 @@
   transform: translateY(-2px);
 }
 
-/* Top-right nav links */
+/* ── Top-right navigation links ─────────────────────── */
 .navbar-links {
   position: absolute;
   top: 20px;
@@ -44,12 +44,24 @@
   background: rgba(0,0,0,0.05);
 }
 
-/* Dark mode tweaks overrides global dark rules */
-body.dark .splash-page { background: #121212; }
+/* ── Dark mode overrides ────────────────────────────── */
+body.dark .splash-page {
+  background: #121212;
+}
 body.dark .splash-page h1,
 body.dark .splash-page h2,
-body.dark .splash-page p { color: #e0e0e0; }
-body.dark .navbar-links a { color: #d1d1d1; }
-body.dark .navbar-links a:hover { background: rgba(255,255,255,0.1); }
-body.dark .splash-page > div > a { background: #444; }
-body.dark .splash-page > div > a:hover { background: #555; }
+body.dark .splash-page p {
+  color: #e0e0e0;
+}
+body.dark .navbar-links a {
+  color: #d1d1d1;
+}
+body.dark .navbar-links a:hover {
+  background: rgba(255,255,255,0.1);
+}
+body.dark .splash-page > div > a {
+  background: #444;
+}
+body.dark .splash-page > div > a:hover {
+  background: #555;
+}

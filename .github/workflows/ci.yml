@@ -25,7 +25,7 @@ jobs:
       - name: Lint & type-check
         run: |
           # Pin Black to the same version you use locally
-          pip install black==25.1.0 flake8 mypy types-passlib types-python-jose
+          pip install black==24.1.0 flake8 mypy types-passlib types-python-jose
 
           # 1) Black in check mode
           black --check backend/app
